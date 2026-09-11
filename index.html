@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="https://i.ibb.co/whtP8S5v/image.png" type="image/png">
+  <meta name="theme-color" content="#0755a5">
+  <title>Student Dashboard | Laff British Montessori School</title>
+  <style>
+    :root{--blue:#0755a5;--blue-dark:#063b78;--yellow:#f7c928;--bg:#f5f8fc;--text:#10233f;--muted:#718096;--border:#e5edf6;--white:#fff}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}a{text-decoration:none;color:inherit}.app{min-height:100vh}
+    .sidebar{width:270px;background:linear-gradient(180deg,var(--blue-dark),var(--blue));color:#fff;padding:20px 14px;position:fixed;inset:0 auto 0 0;z-index:20;transition:.25s ease;overflow:hidden}.brand{height:62px;display:flex;align-items:center;gap:12px;padding:3px 10px 18px;border-bottom:1px solid #ffffff25;white-space:nowrap}.brand img{width:44px;height:44px;flex:0 0 44px;background:#fff;border-radius:50%;padding:4px;object-fit:contain}.brand strong{font-size:14px;line-height:1.2}.brand small{display:block;color:#dbeaff;margin-top:4px}.nav{margin-top:18px}.nav a{display:flex;align-items:center;gap:13px;color:#eaf4ff;padding:12px 13px;border-radius:12px;font-weight:800;margin:5px 0;white-space:nowrap;transition:.2s}.nav a:hover,.nav a.active{background:#ffffff18;color:#fff}.nav a.active{box-shadow:inset 3px 0 var(--yellow)}.ico{width:24px;text-align:center;flex:0 0 24px;font-size:17px}.logout{position:absolute;bottom:18px;left:14px;right:14px;background:#ffffff14!important}.toggle{position:absolute;right:-1px;top:22px;width:34px;height:34px;border:0;border-radius:10px 0 0 10px;background:var(--yellow);color:var(--blue-dark);font-size:20px;font-weight:900;cursor:pointer;z-index:30}
+    .main{margin-left:270px;width:calc(100% - 270px);padding:26px 32px;transition:.25s ease}.top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:7px}.top h1{margin:0;color:var(--blue-dark);font-size:30px;line-height:1.15}.top p{margin:7px 0 0;color:var(--muted)}.profile{display:flex;align-items:center;gap:12px;background:#fff;padding:8px 12px;border:1px solid var(--border);border-radius:15px;box-shadow:0 8px 30px #163d6912}.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--yellow),#ffe88a);display:grid;place-items:center;font-weight:900;color:var(--blue-dark)}
+    .hero{display:grid;grid-template-columns:1.5fr .75fr;gap:18px;margin-bottom:18px}.welcome{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;border-radius:24px;padding:26px;position:relative;overflow:hidden;box-shadow:0 15px 45px #0755a52a}.welcome:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff28;border-radius:50%;right:-75px;top:-85px;box-shadow:0 0 0 28px #ffffff08,0 0 0 56px #ffffff05}.welcome h2{margin:0 0 8px;font-size:24px}.welcome p{margin:0;max-width:640px;color:#dcecff;line-height:1.6}.session{display:inline-flex;margin-top:20px;background:#ffffff16;border:1px solid #ffffff25;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900}.yellow-card{background:linear-gradient(145deg,#fff,#fff9df);border:1px solid #f3e7a6;border-radius:24px;padding:24px;box-shadow:0 15px 45px #163d6910}.yellow-card .label{font-size:12px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.yellow-card strong{display:block;font-size:30px;color:var(--blue-dark);margin-top:8px}.yellow-card span{display:block;margin-top:5px;color:var(--muted);font-size:13px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.stat,.card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:0 10px 35px #163d690b}.stat{min-height:145px}.stat-top{display:flex;justify-content:space-between;align-items:center}.stat .icon{font-size:22px}.stat .mini{font-size:11px;color:#21713a;background:#eaf6ee;border-radius:999px;padding:5px 8px;font-weight:900}.stat h3{margin:16px 0 4px;font-size:28px;color:var(--blue-dark)}.stat p{margin:0;color:var(--muted);font-weight:800;font-size:13px}
+    .content{display:grid;grid-template-columns:1.45fr .85fr;gap:16px;margin-top:16px}.card h2{margin:0 0 17px;color:var(--blue-dark);font-size:18px}.result{display:grid;grid-template-columns:1fr auto;gap:14px;padding:14px 0;border-bottom:1px solid #edf1f6}.result:last-child{border:0;padding-bottom:0}.result b{display:block}.muted{color:var(--muted);font-size:13px;margin-top:4px}.badge{padding:7px 10px;border-radius:999px;background:#eaf6ee;color:#21713a;font-size:12px;font-weight:900;height:max-content}.notice{padding:13px;border-radius:14px;background:#f7faff;border-left:4px solid var(--yellow);margin:9px 0}.notice b{display:block;margin-bottom:4px}.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.quick a{display:block;background:#f5f8fd;border:1px solid #e2ebf5;border-radius:14px;padding:15px;color:var(--blue-dark);font-weight:900;transition:.2s}.quick a:hover{border-color:var(--blue);transform:translateY(-2px)}.footer{margin:22px 2px 4px;color:#7b8798;font-size:12px}
+    body.collapsed .sidebar{width:78px;padding-left:10px;padding-right:10px}body.collapsed .main{margin-left:78px;width:calc(100% - 78px)}body.collapsed .brand{padding-left:7px}.collapsed .brand div,.collapsed .nav a span:not(.ico){display:none}.collapsed .nav a{justify-content:center;padding-left:8px;padding-right:8px}.collapsed .logout{left:10px;right:10px}.collapsed .toggle{transform:rotate(180deg)}
+    @media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.hero,.content{grid-template-columns:1fr}.quick{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:650px){.sidebar{width:78px;padding:20px 10px}.main{margin-left:78px;width:calc(100% - 78px);padding:18px 14px}.brand{padding-left:7px}.brand div,.nav a span:not(.ico){display:none}.nav a{justify-content:center;padding-left:8px;padding-right:8px}.logout{left:10px;right:10px}.top{align-items:flex-start}.profile{display:none}.top h1{font-size:24px}.grid{grid-template-columns:1fr 1fr;gap:10px}.stat{padding:16px;min-height:130px}.stat h3{font-size:23px}.quick{grid-template-columns:1fr}body:not(.collapsed) .sidebar{width:270px}body:not(.collapsed) .main{margin-left:270px;width:calc(100% - 270px)}body:not(.collapsed) .brand div,body:not(.collapsed) .nav a span:not(.ico){display:block}body:not(.collapsed) .nav a{justify-content:flex-start;padding-left:13px;padding-right:13px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <button class="toggle" id="toggle" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button>
+    <div class="brand"><img src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School crest"><div><strong>Laff British Montessori School</strong><small>Student Portal</small></div></div>
+    <nav class="nav" aria-label="Student navigation">
+      <a class="active" href="index.html"><span class="ico">🏠</span><span>Dashboard</span></a>
+      <a href="student-profile.html"><span class="ico">👤</span><span>My Profile</span></a>
+      <a href="student-results.html"><span class="ico">📊</span><span>Results</span></a>
+      <a href="student-attendance.html"><span class="ico">✓</span><span>Attendance</span></a>
+      <a href="student-timetable.html"><span class="ico">🗓</span><span>Timetable</span></a>
+      <a href="student-announcements.html"><span class="ico">🔔</span><span>Announcements</span></a>
+      <a href="student-fees.html"><span class="ico">💳</span><span>Fees & Payments</span></a>
+      <a href="id-card.html"><span class="ico">🪪</span><span>My ID Card</span></a>
+      <a class="logout" href="student-login.html"><span class="ico">↪</span><span>Sign Out</span></a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div><div class="eyebrow">Student Portal</div><h1>Good morning, Sample Student 👋</h1><p>Here is your academic overview for the current term.</p></div>
+      <div class="profile"><div class="avatar">SS</div><div><b>Sample Student</b><div class="muted">LBS-2025-001 · JSS 2</div></div></div>
+    </header>
+
+    <section class="hero">
+      <div class="welcome"><h2>Welcome back to your dashboard</h2><p>Stay up to date with your results, attendance, timetable, announcements and school payments from one secure student portal.</p><div class="session">2025/2026 Session · Third Term</div></div>
+      <div class="yellow-card"><div class="label">Current class</div><strong>JSS 2</strong><span>Student ID: LBS-2025-001</span><span>Status: Active</span></div>
+    </section>
+
+    <section class="grid" aria-label="Student summary">
+      <div class="stat"><div class="stat-top"><span class="icon">📚</span><span class="mini">Active</span></div><h3>8</h3><p>Subjects</p></div>
+      <div class="stat"><div class="stat-top"><span class="icon">✓</span><span class="mini">Good</span></div><h3>94%</h3><p>Attendance</p></div>
+      <div class="stat"><div class="stat-top"><span class="icon">📊</span><span class="mini">Published</span></div><h3>86%</h3><p>Average Score</p></div>
+      <div class="stat"><div class="stat-top"><span class="icon">🔔</span><span class="mini">New</span></div><h3>3</h3><p>Announcements</p></div>
+    </section>
+
+    <section class="content">
+      <div class="card"><h2>Academic Snapshot</h2>
+        <div class="result"><div><b>Mathematics</b><div class="muted">CA 27 · Exam 61 · Total 88</div></div><span class="badge">A</span></div>
+        <div class="result"><div><b>English Language</b><div class="muted">CA 25 · Exam 58 · Total 83</div></div><span class="badge">A</span></div>
+        <div class="result"><div><b>Basic Science</b><div class="muted">CA 24 · Exam 53 · Total 77</div></div><span class="badge">A</span></div>
+        <div class="result"><div><b>Computer Studies</b><div class="muted">CA 26 · Exam 55 · Total 81</div></div><span class="badge">A</span></div>
+      </div>
+      <div class="card"><h2>Latest Announcements</h2>
+        <div class="notice"><b>Third Term Examination</b><span class="muted">The examination timetable has been published.</span></div>
+        <div class="notice"><b>School Fees Reminder</b><span class="muted">Check your fee balance and payment history.</span></div>
+        <div class="notice"><b>Parent Meeting</b><span class="muted">Important school information will be shared with parents.</span></div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px"><h2>Quick Access</h2><div class="quick">
+      <a href="student-results.html">📊 View My Results</a><a href="student-attendance.html">✓ Check Attendance</a><a href="student-timetable.html">🗓 View Timetable</a><a href="student-announcements.html">🔔 Announcements</a><a href="student-fees.html">💳 Fee Status</a><a href="student-profile.html">👤 My Profile</a>
+    </div></section>
+
+    <div class="footer">© 2026 Laff British Montessori School · Student Portal · Demo data will be replaced by secure Supabase data after authentication integration.</div>
+  </main>
+</div>
+<script>
+  const key='laffStudentSidebarCollapsed';
+  const body=document.body;
+  const toggle=document.getElementById('toggle');
+  if(localStorage.getItem(key)==='1') body.classList.add('collapsed');
+  toggle.addEventListener('click',()=>{body.classList.toggle('collapsed');localStorage.setItem(key,body.classList.contains('collapsed')?'1':'0')});
+</script>
+</body>
+</html>
