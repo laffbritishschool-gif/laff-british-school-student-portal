@@ -12,7 +12,7 @@ async function loadResults(){
     if(!session){location.replace('student-login.html');return}
     const uid=session.user.id;
     const [{data:student,error:studentError},{data:school},{data:currentSession},{data:currentTerm}]=await Promise.all([
-      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,school_email,examination_number,status').eq('user_id',uid).maybeSingle(),
+      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,school_email,exam_number,status').eq('user_id',uid).maybeSingle(),
       supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website').limit(1).maybeSingle(),
       supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle(),
       supabase.from('terms').select('id,name,session_id').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle()
@@ -29,8 +29,6 @@ async function loadResults(){
     if(resultError)throw resultError;
     const results=rows||[];
     const avg=results.length?results.reduce((s,r)=>s+Number(r.total||0),0)/results.length:0;
-    const points=results.length?results.reduce((s,r)=>s+Number(r.grade_point||0),0)/results.length:0;
-    const overall=avg>=70?'A':avg>=60?'B':avg>=50?'C':avg>=45?'D':avg>=40?'E':'F';
     const positions=results.map(r=>Number(r.position||0)).filter(Boolean);
     const position=positions.length?Math.min(...positions):null;
     const teacherRemarks=[...new Set(results.map(r=>r.teacher_remark).filter(Boolean))];
@@ -40,14 +38,14 @@ async function loadResults(){
     const termName=(termRow?.name||'').replaceAll('_',' ')||'—';
     text('heroSchoolName',schoolName);text('schoolName',schoolName);text('heroMotto',school?.motto||'Excellence · Character · Confidence · Knowledge');
     text('heroStudent',fullName);text('heroStudentId',student.student_id);text('heroClass',className);text('heroSessionTerm',`${sessionRow?.name||'—'} · ${termName}`);
-    text('studentName',fullName);text('studentId',student.student_id);text('className',className);text('studentStatus',student.status||'ACTIVE');text('examNo',student.examination_number||'—');text('sessionName',sessionRow?.name||'—');text('termName',termName);text('resultStatus',results.length?'Published':'Not Published');
+    text('studentName',fullName);text('studentId',student.student_id);text('className',className);text('studentStatus',student.status||'ACTIVE');text('examNo',student.exam_number||'—');text('sessionName',sessionRow?.name||'—');text('termName',termName);text('resultStatus',results.length?'Published':'Not Published');
     text('reportSession',`${sessionRow?.name||'—'} Academic Session`);text('reportTerm',termName);
     const contact=[school?.address,school?.phone].filter(Boolean).join(' · ');const contact2=[school?.email,school?.website].filter(Boolean).join(' · ');text('schoolContact',[contact,contact2].filter(Boolean).join('\n')||'School contact details');
     ['heroLogo','sheetLogo'].forEach(id=>{const e=document.getElementById(id);if(e)e.src=logo});
     if(!results.length){state.innerHTML='<strong>No published result yet</strong><span>Your result for the current session and term has not been published.</span>';return}
     const body=results.map((r,i)=>{const grade=esc(r.grade||'—');const cls=grade==='A'?'grade-a':grade==='B'?'grade-b':'';return `<tr><td>${i+1}</td><td><b>${esc(r.subjects?.name||'Subject')}</b></td><td>${Number(r.ca_score||0)}</td><td>${Number(r.exam_score||0)}</td><td><b>${Number(r.total||0)}</b></td><td><span class="grade ${cls}">${grade}</span></td><td>${esc(r.grade_point??'—')}</td><td>${esc(r.teacher_remark||'—')}</td></tr>`}).join('');
     html('resultBody',body);show('resultTableWrap');show('summaryRow');show('remarks');
-    text('average',`${avg.toFixed(1)}%`);text('overallGrade',overall);text('position',position?`${position}${position===1?'st':position===2?'nd':position===3?'rd':'th'}`:'—');text('subjectsCount',results.length);
+    text('average',`${avg.toFixed(1)}%`);text('overallGrade',avg>=70?'A':avg>=60?'B':avg>=50?'C':avg>=45?'D':avg>=40?'E':'F');text('position',position?`${position}${position===1?'st':position===2?'nd':position===3?'rd':'th'}`:'—');text('subjectsCount',results.length);
     text('teacherRemark',teacherRemarks[0]||'—');text('principalRemark',principalRemarks[0]||'—');
     state.remove();
   }catch(err){console.error(err);state.innerHTML=`<strong>Results could not be loaded</strong><span>${esc(err.message||'Please try again later.')}</span>`}
