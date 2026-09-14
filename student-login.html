@@ -1,1 +1,135 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="https://i.ibb.co/whtP8S5v/image.png"><meta name="theme-color" content="#0755a5"><title>Student Login | Laff British Montessori School</title><link rel="stylesheet" href="assets/styles.css"></head><body><main class="login-page"><section class="login-shell"><div class="login-brand"><img src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School crest"><h1>Student Portal</h1><p>Securely access your personal school information, results, attendance, timetable, announcements, fees and digital ID.</p><div class="login-points"><div>✓ Your own student records</div><div>✓ Published results only</div><div>✓ Secure Supabase authentication</div><div>✓ Mobile-friendly student portal</div></div></div><div class="login-form"><div class="eyebrow">LAFF BRITISH MONTESSORI SCHOOL</div><h2>Welcome back</h2><p>Sign in with the school email and password issued by the school administrator.</p><form id="loginForm"><div class="field"><label for="email">Student email</label><input id="email" type="email" autocomplete="username" required placeholder="yourname@laffbritishmontesorrischool.com"></div><div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required placeholder="Enter your password"></div><div class="remember"><label><input type="checkbox"> Remember me</label><a href="#" id="forgot">Forgot password?</a></div><div id="loginMessage" role="alert" style="display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff4f2;font-size:13px;font-weight:600"></div><div style="height:17px"></div><button class="button" id="loginButton" type="submit">Sign in securely</button></form><div style="margin-top:22px;text-align:center"><a class="button secondary" href="https://laffbritishschool-gif.github.io/Laff-British-School-/result-checker.html">Check a Result</a></div><p class="muted" style="margin-top:22px;text-align:center">Never share your password with another student.</p></div></section></main><div class="toast"></div><script src="assets/app.js"></script><script type="module">import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';const sb=createClient('https://moqpmrhholbbhuedvbgg.supabase.co','sb_publishable_IfSp9O5zUubH6rifFbfmZQ_DJttLC1f');const f=document.getElementById('loginForm'),b=document.getElementById('loginButton'),m=document.getElementById('loginMessage');const show=(x,ok=false)=>{m.textContent=x;m.style.display=x?'block':'none';m.style.color=ok?'#067647':'#b42318';m.style.background=ok?'#ecfdf3':'#fff4f2'};const boot=async()=>{const{data:{session}}=await sb.auth.getSession();if(session)location.replace('index.html')};boot();f.addEventListener('submit',async e=>{e.preventDefault();show('');b.disabled=true;b.textContent='Signing in…';const email=document.getElementById('email').value.trim().toLowerCase(),password=document.getElementById('password').value;const{data,error}=await sb.auth.signInWithPassword({email,password});if(error){show('Incorrect email or password. Please try again.');b.disabled=false;b.textContent='Sign in securely';return}const{data:p,error:pe}=await sb.from('profiles').select('role,is_active,must_change_password').eq('id',data.user.id).maybeSingle();if(pe||!p||p.role!=='STUDENT'||p.is_active===false){await sb.auth.signOut();show('This is not an active student account. Please contact the school administrator.');b.disabled=false;b.textContent='Sign in securely';return}if(p.must_change_password){location.replace('student-profile.html?change-password=1');return}location.replace('index.html')});document.getElementById('forgot').addEventListener('click',async e=>{e.preventDefault();const email=document.getElementById('email').value.trim().toLowerCase();if(!email){show('Enter your school email first.');return}const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});show(error?'We could not send the reset email. Please contact the school administrator.':'If the account exists, a password reset email has been sent.',!error)});</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="https://i.ibb.co/whtP8S5v/image.png">
+<meta name="theme-color" content="#0755a5">
+<title>Student Login | Laff British Montessori School</title>
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+:root{--blue:#0755a5;--blue-dark:#063f7d;--yellow:#f5c400;--ink:#122033;--muted:#68778d;--line:#dce5ef}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;background:linear-gradient(135deg,#eef5ff 0%,#f8fafc 48%,#fffdf1 100%)}
+.login-shell{width:min(1060px,100%);min-height:650px;display:grid;grid-template-columns:1.02fr .98fr;background:#fff;border:1px solid #e3eaf2;border-radius:28px;overflow:hidden;box-shadow:0 24px 70px rgba(19,45,76,.13)}
+.login-brand{position:relative;padding:58px 54px;background:linear-gradient(145deg,var(--blue-dark),var(--blue));color:#fff;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.login-brand:before,.login-brand:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}.login-brand:before{width:360px;height:360px;right:-170px;top:-110px}.login-brand:after{width:300px;height:300px;left:-170px;bottom:-130px}
+.crest{width:112px;height:112px;object-fit:contain;background:#fff;border-radius:50%;padding:7px;box-shadow:0 12px 28px rgba(0,0,0,.18);margin-bottom:25px;position:relative;z-index:1}
+.brand-kicker{font-size:12px;letter-spacing:2px;font-weight:900;color:#ffe27a;margin-bottom:10px;position:relative;z-index:1}.login-brand h1{font-size:38px;line-height:1.08;margin:0 0 14px;max-width:500px;position:relative;z-index:1}.login-brand p{font-size:16px;line-height:1.7;color:#dcecff;max-width:520px;margin:0 0 26px;position:relative;z-index:1}
+.brand-features{display:grid;gap:11px;position:relative;z-index:1}.brand-features div{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#f4f8ff}.brand-features span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(245,196,0,.18);color:#ffe27a}
+.login-form{padding:58px 54px;display:flex;flex-direction:column;justify-content:center}.school-mark{font-size:11px;letter-spacing:1.5px;color:var(--blue);font-weight:900;margin-bottom:10px}.login-form h2{font-size:30px;margin:0 0 8px}.intro{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 28px}
+.field{margin-bottom:18px}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:8px}.field input{width:100%;height:50px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font:inherit;color:var(--ink);background:#fbfdff;outline:none;transition:.2s}.field input:focus{border-color:#4b91d9;box-shadow:0 0 0 4px rgba(7,85,165,.08);background:#fff}.field input::placeholder{color:#9aa8b9}
+.password-wrap{position:relative}.password-wrap input{padding-right:70px}.show-pass{position:absolute;right:10px;top:8px;height:34px;border:0;background:transparent;color:var(--blue);font-size:12px;font-weight:800;cursor:pointer;padding:0 8px}.login-meta{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:2px 0 20px;font-size:12px;color:var(--muted)}.login-meta a{color:var(--blue);font-weight:800;text-decoration:none}.login-meta a:hover{text-decoration:underline}
+.login-btn{width:100%;height:52px;border:0;border-radius:12px;background:var(--blue);color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 9px 20px rgba(7,85,165,.2);transition:.2s}.login-btn:hover{background:#064887;transform:translateY(-1px)}.login-btn:disabled{opacity:.65;cursor:wait;transform:none}.message{display:none;margin:0 0 17px;padding:12px 14px;border-radius:11px;font-size:13px;font-weight:700;line-height:1.5}.message.error{display:none;background:#fff2f0;color:#b42318;border:1px solid #ffd1cb}.message.success{background:#effbf4;color:#067647;border:1px solid #b9e2cc}
+.divider{display:flex;align-items:center;gap:12px;margin:24px 0 18px;color:#9aa8b9;font-size:11px;font-weight:800;text-transform:uppercase}.divider:before,.divider:after{content:"";height:1px;background:#e8edf3;flex:1}.secondary-btn{display:flex;align-items:center;justify-content:center;width:100%;height:46px;border:1px solid #cfdbe8;border-radius:11px;color:var(--blue);font-size:13px;font-weight:900;text-decoration:none;background:#fff}.secondary-btn:hover{background:#f5f9ff}.login-note{text-align:center;color:#8a98aa;font-size:11px;line-height:1.6;margin:20px 0 0}.login-note b{color:#66758c}
+@media(max-width:800px){.login-shell{grid-template-columns:1fr;min-height:0}.login-brand{padding:38px 30px}.login-brand h1{font-size:30px}.login-brand p{font-size:14px}.login-form{padding:38px 30px}.crest{width:90px;height:90px}.brand-features{grid-template-columns:1fr 1fr}.login-page{padding:14px}}
+@media(max-width:480px){.brand-features{grid-template-columns:1fr}.login-brand{padding:32px 24px}.login-form{padding:32px 24px}.login-form h2{font-size:26px}}
+</style>
+</head>
+<body>
+<main class="login-page">
+<section class="login-shell" aria-label="Student portal sign in">
+<div class="login-brand">
+<img class="crest" src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School crest">
+<div class="brand-kicker">LAFF BRITISH MONTESSORI SCHOOL</div>
+<h1>Student Portal</h1>
+<p>Welcome to your secure school portal. Sign in to access your academic records, results, attendance, timetable, fees and student ID.</p>
+<div class="brand-features">
+<div><span>✓</span> Personal student records</div>
+<div><span>✓</span> Results and academic performance</div>
+<div><span>✓</span> Attendance and timetable</div>
+<div><span>✓</span> Fees and payment information</div>
+</div>
+</div>
+<div class="login-form">
+<div class="school-mark">STUDENT LOGIN</div>
+<h2>Sign in to continue</h2>
+<p class="intro">Enter the registration number and password issued to you by the school.</p>
+<div id="loginMessage" class="message" role="alert"></div>
+<form id="loginForm" novalidate>
+<div class="field">
+<label for="registrationNumber">Registration Number</label>
+<input id="registrationNumber" name="registration_number" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="e.g. LBS-2026-000001" required>
+</div>
+<div class="field">
+<label for="password">Password</label>
+<div class="password-wrap">
+<input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+<button class="show-pass" id="showPassword" type="button">Show</button>
+</div>
+</div>
+<div class="login-meta">
+<label><input id="remember" type="checkbox"> Remember this device</label>
+<a href="mailto:info@laffbritishmontessorischool.com">Need help?</a>
+</div>
+<button class="login-btn" id="loginButton" type="submit">Sign In</button>
+</form>
+<div class="divider">Student services</div>
+<a class="secondary-btn" href="https://laffbritishschool-gif.github.io/Laff-British-School-/result-checker.html">Check Published Result</a>
+<p class="login-note"><b>Important:</b> Keep your registration number and password private. If you cannot sign in, contact the school administrator.</p>
+</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const sb=supabase.createClient('https://moqpmrhholbbhuedvbgg.supabase.co','sb_publishable_IfSp9O5zUubH6rifFbfmZQ_DJttLC1f');
+const form=document.getElementById('loginForm');
+const button=document.getElementById('loginButton');
+const message=document.getElementById('loginMessage');
+const registration=document.getElementById('registrationNumber');
+const password=document.getElementById('password');
+const remember=document.getElementById('remember');
+const showPassword=document.getElementById('showPassword');
+
+function showMessage(text,type='error'){
+  message.textContent=text;
+  message.className='message '+type;
+  message.style.display=text?'block':'none';
+}
+
+showPassword.addEventListener('click',()=>{
+  const visible=password.type==='text';
+  password.type=visible?'password':'text';
+  showPassword.textContent=visible?'Show':'Hide';
+});
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session) location.replace('index.html');
+}
+boot();
+
+form.addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  showMessage('');
+  const registrationNumber=registration.value.trim().toUpperCase();
+  const passwordValue=password.value;
+  if(!registrationNumber||!passwordValue){showMessage('Enter your registration number and password.');return;}
+  button.disabled=true;
+  button.textContent='Signing in…';
+  try{
+    const response=await fetch('https://moqpmrhholbbhuedvbgg.supabase.co/functions/v1/student-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':'sb_publishable_IfSp9O5zUubH6rifFbfmZQ_DJttLC1f'},
+      body:JSON.stringify({registration_number:registrationNumber,password:passwordValue})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||!result.ok||!result.session)throw new Error(result.error||'Invalid registration number or password.');
+    const {error:sessionError}=await sb.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
+    if(sessionError)throw sessionError;
+    const {data:profile,error:profileError}=await sb.from('profiles').select('role,is_active,must_change_password').eq('id',(await sb.auth.getUser()).data.user.id).maybeSingle();
+    if(profileError||!profile||profile.role!=='STUDENT'||profile.is_active===false){await sb.auth.signOut();throw new Error('This is not an active student account. Please contact the school administrator.');}
+    showMessage('Sign in successful. Opening your student portal…','success');
+    if(remember.checked){localStorage.setItem('laffStudentRemember','1');}else{localStorage.removeItem('laffStudentRemember');}
+    setTimeout(()=>location.replace(profile.must_change_password?'student-profile.html?change-password=1':'index.html'),250);
+  }catch(error){
+    showMessage(error.message||'Unable to sign in. Please try again.');
+    button.disabled=false;
+    button.textContent='Sign In';
+  }
+});
+</script>
+</body>
+</html>
