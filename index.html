@@ -33,7 +33,7 @@
 <main class="main"><div class="dashboard-page">
 <header class="top dashboard-top">
 <div class="top-copy"><div class="eyebrow">Student Portal · Dashboard</div><h1 id="greeting">Welcome back</h1><p>Your academic progress, school updates and student services at a glance.</p></div>
-<div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="avatar">ST</div><div><b id="welcomeName">Student</b><div class="muted"><span id="studentId">—</span> · <span id="className">—</span></div></div></div></div>
+<div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Open notification center">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="avatar">ST</div><div><b id="welcomeName">Student</b><div class="muted"><span id="studentId">—</span> · <span id="className">—</span></div></div></div></div>
 </header>
 
 <section class="hero home-hero">
@@ -64,8 +64,5 @@
 <footer class="footer">© 2026 Laff British Montessori School · Student Portal</footer>
 </div></main></div><div class="toast"></div>
 <script src="assets/app.js"></script><script type="module" src="assets/dashboard.js"></script>
-<script>
-window.addEventListener('dashboard-ready',()=>setTimeout(()=>document.getElementById('page-loader')?.classList.add('hide'),250));
-document.addEventListener('DOMContentLoaded',()=>{const sync=()=>{const a=document.getElementById('avatar'),h=document.getElementById('heroAvatar');if(a&&h)h.innerHTML=a.innerHTML;const n=document.getElementById('welcomeName'),id=document.getElementById('studentId'),c=document.getElementById('className');document.getElementById('heroStudentName').textContent=n?.textContent||'Student';document.getElementById('heroStudentId').textContent=id?.textContent||'—';document.getElementById('heroStudentClass').textContent=c?.textContent||'Class not assigned'};['avatar','welcomeName','studentId','className'].forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(sync).observe(e,{childList:true,subtree:true,characterData:true})});sync()});
-</script>
+<script>window.addEventListener('dashboard-ready',()=>setTimeout(()=>document.getElementById('page-loader')?.classList.add('hide'),250));</script>
 </body></html>
