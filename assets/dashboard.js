@@ -1,7 +1,6 @@
 import { supabase } from './supabase.js';
 
-const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;',"\"":'&quot;'}[c]));
-const money = n => `₦${Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const firstName = s => s?.first_name || 'Student';
 const initials = s => `${s?.first_name?.[0]||''}${s?.last_name?.[0]||''}`.toUpperCase() || 'ST';
 const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
@@ -11,9 +10,42 @@ const finishLoader = () => window.dispatchEvent(new CustomEvent('dashboard-ready
 
 function animateValue(id,end,{suffix='',prefix='',duration=700,decimals=0}={}){
  const el=document.getElementById(id); if(!el)return;
- const target=Number(end)||0; const start=0; const t0=performance.now();
- const frame=now=>{const p=Math.min((now-t0)/duration,1),e=1-Math.pow(1-p,3),v=start+(target-start)*e;el.textContent=prefix+(decimals?v.toFixed(decimals):Math.round(v).toLocaleString('en-NG'))+suffix;if(p<1)requestAnimationFrame(frame)};
+ const target=Number(end)||0; const t0=performance.now();
+ const frame=now=>{const p=Math.min((now-t0)/duration,1),e=1-Math.pow(1-p,3),v=target*e;el.textContent=prefix+(decimals?v.toFixed(decimals):Math.round(v).toLocaleString('en-NG'))+suffix;if(p<1)requestAnimationFrame(frame)};
  requestAnimationFrame(frame);
+}
+
+function storagePathFromPhoto(value){
+ if(!value)return null;
+ const raw=String(value).trim();
+ if(!/^https?:\/\//i.test(raw))return raw;
+ try{
+  const u=new URL(raw);
+  const marker='/student-passports/';
+  const at=u.pathname.indexOf(marker);
+  if(at>=0)return decodeURIComponent(u.pathname.slice(at+marker.length));
+ }catch{}
+ return null;
+}
+
+async function getStudentPhotoUrl(photoValue){
+ if(!photoValue)return null;
+ const raw=String(photoValue).trim();
+ const path=storagePathFromPhoto(raw);
+ if(!path)return raw;
+ try{
+  const {data,error}=await supabase.storage.from('student-passports').createSignedUrl(path,60*60*6);
+  if(!error&&data?.signedUrl)return data.signedUrl;
+ }catch(error){console.warn('Student passport signing failed',error)}
+ return null;
+}
+
+function putStudentAvatar(studentPhoto, student){
+ const avatar=document.getElementById('avatar');
+ const hero=document.getElementById('heroAvatar');
+ const fallback=initials(student);
+ const apply=(el,url)=>{if(!el)return;if(url){el.innerHTML=`<img src="${esc(url)}" alt="Student passport photograph" loading="eager" decoding="async">`;const img=el.querySelector('img');img.addEventListener('error',()=>{el.textContent=fallback},{once:true})}else el.textContent=fallback};
+ apply(avatar,studentPhoto);apply(hero,studentPhoto);
 }
 
 async function loadDashboard(){
@@ -35,7 +67,7 @@ async function loadDashboard(){
     const [{data:results},{data:attendance},{data:announcements},{data:fees},{data:payments}]=await Promise.all([
       enrollment&&termRow?.id ? supabase.from('results').select('subject_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,subjects(name)').eq('enrollment_id',enrollment.id).eq('term_id',termRow.id).eq('status','PUBLISHED').order('total',{ascending:false}) : Promise.resolve({data:[]}),
       enrollment ? supabase.from('attendance').select('status').eq('enrollment_id',enrollment.id) : Promise.resolve({data:[]}),
-      supabase.from('announcements').select('id,title,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(5),
+      supabase.from('announcements').select('id,title,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(12),
       supabase.from('fees').select('id,title,amount,due_date').eq('student_id',student.id).eq('session_id',sessionRow?.id||''),
       supabase.from('payments').select('amount,status').eq('student_id',student.id).eq('status','PAID')
     ]);
@@ -47,10 +79,13 @@ async function loadDashboard(){
     set('greeting',`Good ${new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, ${firstName(student)}`);
     set('welcomeName',`${student.first_name||''} ${student.last_name||''}`.trim()); set('studentId',student.student_id||'—'); set('className',className); set('sessionName',sessionRow?.name||'—'); set('termName',termRow?.name?.replaceAll('_',' ')||'—'); set('studentStatus',student.status||'ACTIVE');
     set('balanceLabel',balance?'Outstanding balance':'No outstanding balance');
-    const avatar=document.getElementById('avatar'); if(avatar){if(student.photo_url){avatar.innerHTML=`<img src="${esc(student.photo_url)}" alt="Student photo">`}else avatar.textContent=initials(student)}
     if(school){set('schoolName',school.school_name||'Laff British Montessori School');set('schoolMotto',school.motto||'Learning · Character · Excellence')}
+    const photoUrl=await getStudentPhotoUrl(student.photo_url);
+    putStudentAvatar(photoUrl,student);
     setHtml('resultList', resultRows.slice(0,4).map(r=>`<div class="dash-row"><div><b>${esc(r.subjects?.name||'Subject')}</b><span class="muted">CA ${Number(r.ca_score||0)} · Exam ${Number(r.exam_score||0)} · Total ${Number(r.total||0)}</span></div><span class="grade-badge">${esc(r.grade||'—')}</span></div>`).join('') || '<div class="empty">No published results are available for this term yet.</div>');
     setHtml('noticeList',(announcements||[]).slice(0,4).map(a=>`<article class="notice-item"><span class="notice-icon">◆</span><div><b>${esc(a.title)}</b><p>${esc((a.body||'').slice(0,115))}${(a.body||'').length>115?'…':''}</p><small>${a.published_at?new Date(a.published_at).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}):''}</small></div></article>`).join('') || '<div class="empty">No new announcements.</div>');
+    window.__studentNotifications=announcements||[];
+    window.dispatchEvent(new CustomEvent('student-notifications-ready',{detail:window.__studentNotifications}));
     setHtml('attendanceBreakdown',`<div><b>${present}</b><span>Present</span></div><div><b>${absent}</b><span>Absent</span></div><div><b>${late}</b><span>Late</span></div>`);
     animateValue('subjectsCount',resultRows.length,{duration:650}); animateValue('attendancePct',attendancePct,{suffix:'%',duration:800}); animateValue('averagePct',average,{suffix:'%',duration:850}); animateValue('balance',balance,{prefix:'₦',duration:900,decimals:2});
     set('pulseAttendance',`${attendancePct}%`); set('pulseAverage',`${average}%`); set('pulseSubjects',`${resultRows.length} subject${resultRows.length===1?'':'s'}`);
