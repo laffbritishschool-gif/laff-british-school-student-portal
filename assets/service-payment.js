@@ -1,4 +1,8 @@
 import { supabase } from './supabase.js';
+
+// Paystack public key for browser-side integrations. This is a TEST public key for payment testing.
+export const PAYSTACK_PUBLIC_KEY='pk_test_3c6749696834a73e309d35b2fe573f450cbe7bdf';
+
 const EDGE='https://moqpmrhholbbhuedvbgg.supabase.co/functions/v1/paystack-payment';
 export async function servicePaid(serviceCode){const {data:{session}}=await supabase.auth.getSession();if(!session)return false;const {data,error}=await supabase.rpc('has_paid_student_service',{p_service_code:serviceCode});if(error)throw error;return data===true}
 export async function verifyPaymentFromUrl(serviceCode){const params=new URLSearchParams(location.search),reference=params.get('reference')||params.get('payment_reference');if(!reference)return null;const {data:{session}}=await supabase.auth.getSession();if(!session)return null;const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action:'verify',service_code:serviceCode,reference})});const payload=await res.json();history.replaceState({},document.title,location.pathname);if(!res.ok)throw new Error(payload.error||'Payment verification failed.');return payload}
