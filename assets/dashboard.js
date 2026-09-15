@@ -6,6 +6,7 @@ const firstName = s => s?.first_name || 'Student';
 const initials = s => `${s?.first_name?.[0]||''}${s?.last_name?.[0]||''}`.toUpperCase() || 'ST';
 const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
 const setHtml = (id, value) => { const el=document.getElementById(id); if(el) el.innerHTML=value; };
+const finishLoader = () => window.dispatchEvent(new CustomEvent('dashboard-ready'));
 
 async function loadDashboard(){
   const loading=document.getElementById('dashboardLoading');
@@ -42,8 +43,8 @@ async function loadDashboard(){
     const paid=(payments||[]).reduce((a,p)=>a+Number(p.amount||0),0);
     const balance=Math.max(totalFees-paid,0);
 
-    set('greeting',`Good ${new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, ${esc(firstName(student))}`);
-    set('welcomeName',`${esc(student.first_name||'')} ${esc(student.last_name||'')}`.trim());
+    set('greeting',`Good ${new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, ${firstName(student)}`);
+    set('welcomeName',`${student.first_name||''} ${student.last_name||''}`.trim());
     set('studentId',student.student_id||'—'); set('className',className); set('sessionName',sessionRow?.name||'—'); set('termName',termRow?.name?.replace('_',' ')||'—'); set('studentStatus',student.status||'ACTIVE');
     set('subjectsCount',String(resultRows.length||'—')); set('attendancePct',totalAtt?`${attendancePct}%`:'—'); set('averagePct',resultRows.length?`${average}%`:'—'); set('balance',money(balance)); set('balanceLabel',balance?'Outstanding balance':'No outstanding balance'); set('unreadCount',String((announcements||[]).length));
     const avatar=document.getElementById('avatar'); if(avatar){if(student.photo_url){avatar.innerHTML=`<img src="${esc(student.photo_url)}" alt="Student photo">`}else avatar.textContent=initials(student)}
@@ -53,8 +54,10 @@ async function loadDashboard(){
     setHtml('noticeList',(announcements||[]).slice(0,4).map(a=>`<article class="notice-item"><span class="notice-icon">◆</span><div><b>${esc(a.title)}</b><p>${esc((a.body||'').slice(0,115))}${(a.body||'').length>115?'…':''}</p><small>${a.published_at?new Date(a.published_at).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}):''}</small></div></article>`).join('') || '<div class="empty">No new announcements.</div>');
     setHtml('attendanceBreakdown',`<div><b>${present}</b><span>Present</span></div><div><b>${att.filter(x=>x.status==='ABSENT').length}</b><span>Absent</span></div><div><b>${late}</b><span>Late</span></div>`);
     if(loading) loading.remove();
+    finishLoader();
   }catch(err){
     console.error(err); if(loading){loading.className='dashboard-error';loading.innerHTML=`<strong>Dashboard could not load</strong><p>${esc(err.message)}</p><a class="button" href="student-login.html">Return to Login</a>`}
+    finishLoader();
   }
 }
 
