@@ -9,11 +9,20 @@ const show=(id,on=true)=>{const e=document.getElementById(id);if(e)e.hidden=!on}
 function addPaymentCss(){if(document.querySelector('link[data-service-payment]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='assets/service-payment.css';l.dataset.servicePayment='1';document.head.appendChild(l)}
 async function requirePayment(){
  addPaymentCss();
- const verified=await verifyPaymentFromUrl(SERVICE);
- if(verified?.paid){show('resultTableWrap',false);show('summaryRow',false);show('remarks',false);return true}
- if(await servicePaid(SERVICE))return true;
- const {data:setting}=await supabase.from('student_service_settings').select('title,amount,is_active').eq('service_code',SERVICE).maybeSingle();
  const state=document.getElementById('resultState');
+ try{
+  const verified=await verifyPaymentFromUrl(SERVICE);
+  if(verified?.paid){
+   if(state){state.innerHTML='<strong>Payment verified successfully</strong><span>Opening your published result…</span>';state.classList.add('payment-opening');}
+   return true;
+  }
+ }catch(err){
+  if(state)state.innerHTML=`<strong>Payment verification needs attention</strong><span>${esc(err.message||'Please try again.')}</span>`;
+  return false;
+ }
+ try{if(await servicePaid(SERVICE))return true;}catch(err){console.warn('Paid-status check failed:',err)}
+ const {data:setting,error}=await supabase.from('student_service_settings').select('title,amount,is_active').eq('service_code',SERVICE).maybeSingle();
+ if(error)throw error;
  if(!setting?.is_active){state.innerHTML='<strong>Result access is currently unavailable</strong><span>Please contact the school office for assistance.</span>';return false}
  state.innerHTML=paymentGateMarkup({title:'Unlock Your Published Results',description:'A verified result-access payment is required before your academic result sheet can be viewed or printed.',amount:setting.amount});
  document.getElementById('servicePayButton')?.addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Opening secure checkout…';try{await startServicePayment(SERVICE)}catch(err){b.disabled=false;b.textContent='Pay & Continue';state.insertAdjacentHTML('beforeend',`<div class="service-payment-success" style="background:#fdeaea;color:#9b2c2c;margin-top:14px">${esc(err.message)}</div>`)}});
@@ -23,8 +32,8 @@ async function requirePayment(){
 async function loadResults(){
  const state=document.getElementById('resultState');
  try{
-  const {data:{session}}=await supabase.auth.getSession(); if(!session){location.replace('student-login.html');return}
-  const paid=await requirePayment(); if(!paid)return;
+  const {data:{session}}=await supabase.auth.getSession();if(!session){location.replace('student-login.html');return}
+  const paid=await requirePayment();if(!paid)return;
   const uid=session.user.id;
   const [{data:student,error:studentError},{data:school},{data:currentSession},{data:currentTerm}]=await Promise.all([
    supabase.from('students').select('id,student_id,first_name,middle_name,last_name,school_email,exam_number,status').eq('user_id',uid).maybeSingle(),
