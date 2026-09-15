@@ -1,21 +1,57 @@
 const KEY='laffStudentSidebarCollapsed';
 function injectPortalPolish(){
- if(!document.querySelector('link[data-portal-polish]')){const l=document.createElement('link');l.rel='stylesheet';l.href='assets/portal-polish.css?v=2';l.dataset.portalPolish='1';document.head.appendChild(l)}
+ if(!document.querySelector('link[data-portal-polish]')){const l=document.createElement('link');l.rel='stylesheet';l.href='assets/portal-polish.css?v=3';l.dataset.portalPolish='1';document.head.appendChild(l)}
  if(document.querySelector('#page-loader,.portal-page-loader')||document.body.classList.contains('login-page'))return;
  const loader=document.createElement('div');loader.className='portal-page-loader';loader.id='portalPageLoader';loader.innerHTML='<div class="portal-loader-inner"><div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School"></div><div class="portal-loader-title">Laff British Montessori School</div><p class="portal-loader-sub">Loading your student portal…</p><div class="portal-loader-bar"><i></i></div></div>';
  document.body.prepend(loader); window.__portalLoader=loader; setTimeout(()=>loader.classList.add('hide'),1000);
 }
 function hidePortalLoader(delay=0){setTimeout(()=>window.__portalLoader?.classList.add('hide'),delay)}
+function ensurePortalPanels(){
+ if(document.getElementById('notificationCenter'))return;
+ const center=document.createElement('div');center.id='notificationCenter';center.className='portal-overlay';center.hidden=true;
+ center.innerHTML='<div class="notification-center" role="dialog" aria-modal="true" aria-labelledby="notificationTitle"><div class="notification-head"><div><span class="eyebrow">STUDENT UPDATES</span><h2 id="notificationTitle">Notification Center</h2><p>Important school announcements and recent updates.</p></div><button class="notification-close" type="button" aria-label="Close notifications">×</button></div><div id="notificationList" class="notification-list"><div class="notification-loading"><span></span>Loading notifications…</div></div><div class="notification-foot"><a href="student-announcements.html">Open all announcements →</a></div></div>';
+ document.body.appendChild(center);
+ center.addEventListener('click',e=>{if(e.target===center)closeNotificationCenter()});
+ center.querySelector('.notification-close').addEventListener('click',closeNotificationCenter);
+}
+function ensureProfileMenu(){
+ const chip=document.querySelector('.profile-chip'); if(!chip||document.getElementById('profileMenu'))return;
+ chip.setAttribute('role','button');chip.setAttribute('tabindex','0');chip.setAttribute('aria-haspopup','menu');chip.setAttribute('aria-expanded','false');chip.classList.add('profile-chip-clickable');
+ const menu=document.createElement('div');menu.id='profileMenu';menu.className='profile-menu';menu.innerHTML='<a href="student-profile.html" role="menuitem"><span>♙</span><div><b>My Profile</b><small>View your student information</small></div></a><button type="button" role="menuitem" class="profile-logout"><span>↪</span><div><b>Logout</b><small>Sign out of this account</small></div></button>';chip.parentElement.style.position='relative';chip.parentElement.appendChild(menu);
+ const toggle=()=>{const open=menu.classList.toggle('show');chip.setAttribute('aria-expanded',open?'true':'false')};
+ chip.addEventListener('click',toggle);chip.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}if(e.key==='Escape')closeProfileMenu()});
+ menu.querySelector('.profile-logout').addEventListener('click',()=>signOut());
+ document.addEventListener('click',e=>{if(!chip.parentElement.contains(e.target))closeProfileMenu()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeProfileMenu();closeNotificationCenter()}});
+}
+function closeProfileMenu(){const menu=document.getElementById('profileMenu'),chip=document.querySelector('.profile-chip');menu?.classList.remove('show');chip?.setAttribute('aria-expanded','false')}
+async function openNotificationCenter(){
+ ensurePortalPanels(); const center=document.getElementById('notificationCenter'),list=document.getElementById('notificationList');center.hidden=false;document.body.classList.add('portal-modal-open');requestAnimationFrame(()=>center.classList.add('show'));
+ try{
+  if(window.__studentNotifications){renderNotifications(window.__studentNotifications);return}
+  const {supabase}=await import('./supabase.js');
+  const {data,error}=await supabase.from('announcements').select('id,title,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(12);
+  if(error)throw error;window.__studentNotifications=data||[];renderNotifications(window.__studentNotifications);
+ }catch(e){console.error(e);list.innerHTML='<div class="notification-empty"><b>Notifications unavailable</b><span>Please try again shortly.</span></div>'}
+}
+function renderNotifications(items){
+ const list=document.getElementById('notificationList');if(!list)return;
+ if(!items?.length){list.innerHTML='<div class="notification-empty"><b>No new notifications</b><span>You are all caught up.</span></div>';return}
+ list.innerHTML=items.map((a,i)=>{const date=a.published_at||a.created_at;return `<article class="notification-item" style="--n:${i}"><span class="notification-mark">◆</span><div><div class="notification-title-row"><b>${escapePortalText(a.title)}</b><time>${date?new Date(date).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}):''}</time></div><p>${escapePortalText((a.body||'').slice(0,220))}${(a.body||'').length>220?'…':''}</p></div></article>`}).join('');
+}
+function escapePortalText(value=''){const div=document.createElement('div');div.textContent=String(value);return div.innerHTML}
+function closeNotificationCenter(){const center=document.getElementById('notificationCenter');if(!center)return;center.classList.remove('show');document.body.classList.remove('portal-modal-open');setTimeout(()=>center.hidden=true,220)}
 function setupPortal(){
- injectPortalPolish();
+ injectPortalPolish();ensurePortalPanels();ensureProfileMenu();
  const body=document.body,t=document.getElementById('toggle');
  if(localStorage.getItem(KEY)==='1')body.classList.add('collapsed');
  if(t)t.addEventListener('click',()=>{body.classList.toggle('collapsed');localStorage.setItem(KEY,body.classList.contains('collapsed')?'1':'0')});
  const bell=document.getElementById('notificationBell');
- if(bell)bell.addEventListener('click',()=>showToast('Your latest school notifications are shown here.'));
+ if(bell){bell.setAttribute('aria-haspopup','dialog');bell.addEventListener('click',openNotificationCenter)}
  document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();showToast(b.dataset.toast)}));
  document.querySelectorAll('.logout').forEach(link=>link.addEventListener('click',async e=>{if(link.getAttribute('href')!=='#')e.preventDefault();await signOut()}));
  window.addEventListener('dashboard-ready',()=>hidePortalLoader(350));
+ window.addEventListener('student-notifications-ready',e=>{window.__studentNotifications=e.detail||[];if(!document.getElementById('notificationCenter')?.hidden)renderNotifications(window.__studentNotifications)});
  document.querySelectorAll('.stat h3,.finance-stat strong').forEach((el,i)=>el.style.animationDelay=`${i*70}ms`);
 }
 function showToast(message){let el=document.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';document.body.appendChild(el)}el.textContent=message;el.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove('show'),2800)}
