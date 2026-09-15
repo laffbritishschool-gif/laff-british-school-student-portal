@@ -1,0 +1,40 @@
+import { supabase } from './supabase.js';
+
+const EDGE = `${window.location.origin.includes('localhost') ? 'https://moqpmrhholbbhuedvbgg.supabase.co' : 'https://moqpmrhholbbhuedvbgg.supabase.co'}/functions/v1/paystack-payment`;
+
+export async function servicePaid(serviceCode){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session) return false;
+  const {data,error}=await supabase.rpc('has_paid_student_service',{p_service_code:serviceCode});
+  if(error) throw error;
+  return data===true;
+}
+
+export async function verifyPaymentFromUrl(serviceCode){
+  const params=new URLSearchParams(location.search);
+  const reference=params.get('payment_reference');
+  const service=params.get('service');
+  if(!reference || service!==serviceCode) return null;
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session) return null;
+  const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action:'verify',service_code:serviceCode,reference})});
+  const payload=await res.json();
+  history.replaceState({},document.title,location.pathname);
+  if(!res.ok) throw new Error(payload.error||'Payment verification failed.');
+  return payload;
+}
+
+export async function startServicePayment(serviceCode){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session) throw new Error('Your session has expired. Please sign in again.');
+  const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action:'initialize',service_code:serviceCode})});
+  const payload=await res.json();
+  if(!res.ok) throw new Error(payload.error||'Could not start payment.');
+  if(payload.paid) return payload;
+  if(payload.authorization_url){location.href=`${payload.authorization_url}&callback_url=${encodeURIComponent(location.origin+location.pathname+'?payment_reference='+payload.reference+'&service='+serviceCode)}`;return payload;}
+  throw new Error('Paystack did not return a checkout URL.');
+}
+
+export function paymentGateMarkup({title,description,amount}){
+ return `<div class="service-payment-gate"><div class="service-payment-icon">₦</div><span class="eyebrow">SECURE ACCESS</span><h2>${title}</h2><p>${description}</p><div class="service-payment-price">₦${Number(amount||0).toLocaleString('en-NG')}</div><button class="button yellow" id="servicePayButton">Pay & Continue</button><small>Payment is processed securely by Paystack. Your access is unlocked only after the payment is verified.</small></div>`;
+}
