@@ -1,11 +1,12 @@
 import { supabase } from './supabase.js';
 
-const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;',"\"":'&quot;'}[c]));
 const money = n => `₦${Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 const firstName = s => s?.first_name || 'Student';
 const initials = s => `${s?.first_name?.[0]||''}${s?.last_name?.[0]||''}`.toUpperCase() || 'ST';
 const set = (id, value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
 const setHtml = (id, value) => { const el=document.getElementById(id); if(el) el.innerHTML=value; };
+const setProgress = (id, value) => { const el=document.getElementById(id); if(el) requestAnimationFrame(()=>{el.style.width=`${Math.max(0,Math.min(100,Number(value)||0))}%`;}); };
 const finishLoader = () => window.dispatchEvent(new CustomEvent('dashboard-ready'));
 
 function animateValue(id,end,{suffix='',prefix='',duration=700,decimals=0}={}){
@@ -52,6 +53,8 @@ async function loadDashboard(){
     setHtml('noticeList',(announcements||[]).slice(0,4).map(a=>`<article class="notice-item"><span class="notice-icon">◆</span><div><b>${esc(a.title)}</b><p>${esc((a.body||'').slice(0,115))}${(a.body||'').length>115?'…':''}</p><small>${a.published_at?new Date(a.published_at).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}):''}</small></div></article>`).join('') || '<div class="empty">No new announcements.</div>');
     setHtml('attendanceBreakdown',`<div><b>${present}</b><span>Present</span></div><div><b>${absent}</b><span>Absent</span></div><div><b>${late}</b><span>Late</span></div>`);
     animateValue('subjectsCount',resultRows.length,{duration:650}); animateValue('attendancePct',attendancePct,{suffix:'%',duration:800}); animateValue('averagePct',average,{suffix:'%',duration:850}); animateValue('balance',balance,{prefix:'₦',duration:900,decimals:2});
+    set('pulseAttendance',`${attendancePct}%`); set('pulseAverage',`${average}%`); set('pulseSubjects',`${resultRows.length} subject${resultRows.length===1?'':'s'}`);
+    setProgress('attendanceProgress',attendancePct); setProgress('averageProgress',average); setProgress('subjectsProgress',Math.min(resultRows.length*10,100));
     if(loading) loading.remove(); finishLoader();
   }catch(err){
     console.error(err); if(loading){loading.className='dashboard-error';loading.innerHTML=`<strong>Dashboard could not load</strong><p>${esc(err.message)}</p><a class="button" href="student-login.html">Return to Login</a>`} finishLoader();
