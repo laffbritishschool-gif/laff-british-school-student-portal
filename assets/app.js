@@ -73,7 +73,8 @@ function applySettingsToDom(settings) {
   document.documentElement.style.setProperty('--portal-blue', s.primary_color || DEFAULT_SCHOOL_SETTINGS.primary_color);
   document.documentElement.style.setProperty('--portal-yellow', s.secondary_color || DEFAULT_SCHOOL_SETTINGS.secondary_color);
   document.body.classList.toggle('school-dark', s.ui_settings.theme === 'dark');
-  document.body.classList.toggle('nav-header', s.ui_settings.navigation === 'header');
+  // Student navigation is ALWAYS a fixed left sidebar, like the admin portal.
+  document.body.classList.remove('nav-header');
   document.body.classList.toggle('compact-sidebar', !!s.ui_settings.compact_sidebar);
   document.querySelectorAll('[data-school-name]').forEach(el => el.textContent = s.school_name);
   document.querySelectorAll('[data-school-motto]').forEach(el => el.textContent = s.motto || DEFAULT_SCHOOL_SETTINGS.motto);
@@ -154,17 +155,24 @@ function injectSidebarRuntimeStyles() {
   const style = document.createElement('style');
   style.id = 'student-sidebar-runtime-style';
   style.textContent = `
-    .student-sidebar-overlay{display:none}
-    body.nav-header #studentSidebar{position:sticky;top:0;width:100%;height:auto;min-height:76px;display:flex;flex-direction:row;align-items:center;gap:18px;padding:10px 20px;border-right:0;border-bottom:1px solid var(--border,#e3ebf5);box-shadow:0 8px 24px rgba(19,43,88,.06)}
-    body.nav-header #studentSidebar .brand{min-width:190px;padding:4px 8px}
-    body.nav-header #studentSidebar .nav{display:flex;align-items:center;gap:4px;overflow:auto;flex:1;margin-top:0}
-    body.nav-header #studentSidebar .nav a{white-space:nowrap;margin:0;padding:10px 11px}
-    body.nav-header #studentSidebar .logout{position:static;margin:0}
-    body.nav-header .main{margin-left:0;width:100%}
+    /* DESKTOP: fixed left sidebar, matching the admin portal layout. */
+    #studentSidebar{position:fixed!important;inset:0 auto 0 0!important;width:270px!important;height:100vh!important;min-height:100vh!important;z-index:40!important;overflow-y:auto!important}
+    .main{margin-left:270px!important;width:calc(100% - 270px)!important}
+    body.collapsed #studentSidebar{width:78px!important}
+    body.collapsed .main{margin-left:78px!important;width:calc(100% - 78px)!important}
+    body.nav-header #studentSidebar{position:fixed!important;inset:0 auto 0 0!important;width:270px!important;height:100vh!important;display:block;padding:0;border-right:1px solid var(--border,#e3ebf5);border-bottom:0;box-shadow:none}
+    body.nav-header #studentSidebar .brand{min-width:0;padding:22px 18px}
+    body.nav-header #studentSidebar .nav{display:flex;flex-direction:column;align-items:stretch;gap:4px;overflow:visible;flex:initial;margin-top:18px}
+    body.nav-header #studentSidebar .nav a{white-space:normal;margin:0;padding:12px 16px}
+    body.nav-header #studentSidebar .logout{position:static;margin-top:auto}
+    body.nav-header .main{margin-left:270px!important;width:calc(100% - 270px)!important}
     @media(max-width:760px){
-      body:not(.nav-header) #studentSidebar{width:270px;transform:translateX(-100%);box-shadow:16px 0 45px rgba(3,48,98,.22)}
-      body:not(.nav-header) #studentSidebar.open{transform:translateX(0)}
-      .student-sidebar-overlay{position:fixed;inset:0;background:rgba(3,28,53,.4);z-index:25;display:block;opacity:0;visibility:hidden;transition:.25s ease}
+      #studentSidebar{width:270px!important;transform:translateX(-100%);box-shadow:16px 0 45px rgba(3,48,98,.22)!important}
+      #studentSidebar.open{transform:translateX(0)}
+      .main{margin-left:0!important;width:100%!important}
+      body.collapsed #studentSidebar{width:270px!important}
+      body.collapsed .main{margin-left:0!important;width:100%!important}
+      .student-sidebar-overlay{position:fixed;inset:0;background:rgba(3,28,53,.4);z-index:35;display:block;opacity:0;visibility:hidden;transition:.25s ease}
       .student-sidebar-overlay.show{opacity:1;visibility:visible}
       .student-sidebar-mobile-menu{display:grid!important;place-items:center;width:42px;height:42px;border:1px solid var(--border,#e3ebf5);background:#fff;color:var(--blue-dark,#063b78);border-radius:12px;cursor:pointer;box-shadow:0 7px 24px rgba(22,61,105,.08);flex:0 0 42px}
     }
@@ -174,7 +182,6 @@ function injectSidebarRuntimeStyles() {
 }
 
 function ensureMobileMenu() {
-  if (document.body.classList.contains('nav-header')) return;
   if (document.querySelector('.student-sidebar-mobile-menu')) return;
   const top = document.querySelector('.top');
   if (!top) return;
@@ -190,20 +197,23 @@ function ensureMobileMenu() {
 
 function ensureSidebarRuntime() {
   const host = document.querySelector('.app');
-  const existing = document.querySelector('#studentSidebar, .sidebar');
-  if (!host || !existing) return;
+  if (!host) return;
   injectSidebarRuntimeStyles();
   const settings = getCachedSchoolSettings();
-  const old = existing;
+  const existing = document.querySelector('#studentSidebar, .sidebar');
   const fresh = document.createElement('div');
   fresh.innerHTML = renderSidebar(settings);
   const sidebar = fresh.firstElementChild;
-  old.replaceWith(sidebar);
-  const overlay = document.createElement('div');
-  overlay.className = 'student-sidebar-overlay';
-  overlay.id = 'studentSidebarOverlay';
-  overlay.addEventListener('click', () => toggleSidebar(false));
-  document.body.appendChild(overlay);
+  if (existing) existing.replaceWith(sidebar);
+  else host.prepend(sidebar);
+  const previousOverlay = document.getElementById('studentSidebarOverlay');
+  if (!previousOverlay) {
+    const overlay = document.createElement('div');
+    overlay.className = 'student-sidebar-overlay';
+    overlay.id = 'studentSidebarOverlay';
+    overlay.addEventListener('click', () => toggleSidebar(false));
+    document.body.appendChild(overlay);
+  }
   bindSidebarEvents();
   ensureMobileMenu();
 }
