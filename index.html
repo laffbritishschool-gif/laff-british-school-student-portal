@@ -8,61 +8,140 @@
 <title>Dashboard | Laff British Montessori School</title>
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="stylesheet" href="assets/dashboard-home.css">
-<style>
-#page-loader{position:fixed;inset:0;background:#fff;display:grid;place-items:center;z-index:99999;transition:opacity .45s ease,visibility .45s ease}.loader-box{width:230px;padding:25px 24px;text-align:center;background:#fff;color:#063b78;font-size:12px;font-weight:900}.loader-logo-wrap{width:92px;height:92px;margin:auto;position:relative}.loader-logo{width:70px;height:70px;position:absolute;left:11px;top:11px;background:#fff;border-radius:50%;padding:5px;object-fit:contain;box-shadow:0 10px 28px rgba(7,85,165,.16);animation:loaderFloat 1.7s ease-in-out infinite}.loader-ring{position:absolute;inset:0;border:3px solid #e7eef7;border-top-color:#0755a5;border-right-color:#f7c928;border-radius:50%;animation:loaderSpin .9s linear infinite}.loader-ring:after{content:"";position:absolute;inset:9px;border:1px dashed #0755a533;border-radius:50%;animation:loaderSpin 2.2s linear infinite reverse}.loader-title{margin:20px 0 5px;color:#063b78;font-size:13px}.loader-sub{margin:0;color:#8290a2;font-size:10px;font-weight:700}.loader-bar{width:150px;height:3px;margin:13px auto 0;background:#edf2f7;border-radius:99px;overflow:hidden}.loader-bar i{display:block;width:42%;height:100%;background:linear-gradient(90deg,#0755a5,#f7c928);animation:loaderBar 1.15s ease-in-out infinite}#page-loader.hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}@keyframes loaderSpin{to{transform:rotate(360deg)}}@keyframes loaderFloat{50%{transform:translateY(-5px)}}@keyframes loaderBar{0%{transform:translateX(-120%)}50%{transform:translateX(130%)}100%{transform:translateX(330%)}}@media(prefers-reduced-motion:reduce){.loader-logo,.loader-ring,.loader-ring:after,.loader-bar i{animation:none!important}}
-</style>
+<link rel="stylesheet" href="assets/portal-polish.css?v=4" data-portal-polish>
 </head>
 <body>
-<div id="page-loader"><div class="loader-box"><div class="loader-logo-wrap"><span class="loader-ring"></span><img class="loader-logo" src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School"></div><div class="loader-title">Laff British Montessori School</div><p class="loader-sub">Loading your student portal…</p><div class="loader-bar"><i></i></div></div></div>
-<div class="app">
-<aside class="sidebar" aria-label="Student portal navigation">
-<button class="toggle" id="toggle" aria-label="Collapse sidebar">‹</button>
-<div class="brand"><img src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School crest"><div><strong>Laff British Montessori School</strong><small>Student Portal</small></div></div>
-<nav class="nav">
-<a class="active" href="index.html"><span class="ico">⌂</span><span>Dashboard</span></a>
-<a href="student-profile.html"><span class="ico">♙</span><span>My Profile</span></a>
-<a href="student-results.html"><span class="ico">▥</span><span>Results</span></a>
-<a href="student-attendance.html"><span class="ico">✓</span><span>Attendance</span></a>
-<a href="student-timetable.html"><span class="ico">□</span><span>Timetable</span></a>
-<a href="student-announcements.html"><span class="ico">♢</span><span>Announcements</span></a>
-<a href="student-fees.html"><span class="ico">₦</span><span>Fees & Payments</span></a>
-<a href="id-card.html"><span class="ico">▣</span><span>My ID Card</span></a>
-<a class="logout" href="#" onclick="event.preventDefault();signOut()"><span class="ico">↪</span><span>Sign Out</span></a>
-</nav></aside>
-
-<main class="main"><div class="dashboard-page">
-<header class="top dashboard-top">
-<div class="top-copy"><div class="eyebrow">Student Portal · Dashboard</div><h1 id="greeting">Welcome back</h1><p>Your academic progress, school updates and student services at a glance.</p></div>
-<div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Open notification center">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="avatar">ST</div><div><b id="welcomeName">Student</b><div class="muted"><span id="studentId">—</span> · <span id="className">—</span></div></div></div></div>
-</header>
-
-<section class="hero home-hero">
-<div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
-<div class="hero-content"><div class="hero-label">Your learning journey</div><h2 id="schoolName">Laff British Montessori School</h2><p id="schoolMotto">Learning · Character · Excellence</p><div class="hero-meta"><span class="pill">Session <strong id="sessionName">—</strong></span><span class="pill">Term <strong id="termName">—</strong></span><span class="pill">Status <strong id="studentStatus">ACTIVE</strong></span></div></div>
-<div class="hero-profile"><div class="hero-profile-top"><span>Student profile</span><span class="hero-status">● Active</span></div><div class="hero-profile-main"><div class="hero-avatar" id="heroAvatar">ST</div><div><h3 id="heroStudentName">Student</h3><p id="heroStudentClass">Class not assigned</p></div></div><div class="hero-profile-foot"><div><span>Registration</span><b id="heroStudentId">—</b></div><div><span>Portal access</span><b>Enabled</b></div></div></div>
-</section>
-
-<div id="dashboardLoading" class="dashboard-loading"><span class="loading-dot"></span> Preparing your latest academic information…</div>
-<div id="dashboardContent">
-<section class="grid dash-grid">
-<div class="stat dash-stat"><div class="stat-top"><span class="label">Published subjects</span><span class="mini">LIVE</span></div><h3 id="subjectsCount">—</h3><p>Results available this term</p><div class="stat-glow"></div></div>
-<div class="stat dash-stat"><div class="stat-top"><span class="label">Attendance</span><span class="mini">TRACKED</span></div><h3 id="attendancePct">—</h3><p>Recorded attendance</p><div class="stat-glow"></div></div>
-<div class="stat dash-stat"><div class="stat-top"><span class="label">Term average</span><span class="mini">CURRENT</span></div><h3 id="averagePct">—</h3><p>Published results</p><div class="stat-glow"></div></div>
-<div class="stat dash-stat fee-stat"><div class="stat-top"><span class="label">Fee balance</span><span class="mini">ACCOUNT</span></div><h3 id="balance">—</h3><p id="balanceLabel">Current balance</p><div class="stat-glow"></div></div>
-</section>
-
-<section class="pulse-card" aria-label="Learning pulse">
-<div class="pulse-copy"><div class="eyebrow">Learning pulse</div><h2>Keep your momentum going.</h2><p>Use your current attendance and published results to stay focused on the term.</p></div>
-<div class="pulse-metrics"><div class="pulse-metric"><div><span>Attendance</span><b id="pulseAttendance">—</b></div><div class="progress"><i id="attendanceProgress"></i></div></div><div class="pulse-metric"><div><span>Academic average</span><b id="pulseAverage">—</b></div><div class="progress"><i id="averageProgress"></i></div></div><div class="pulse-metric"><div><span>Results published</span><b id="pulseSubjects">—</b></div><div class="progress"><i id="subjectsProgress"></i></div></div></div>
-<div class="pulse-mark">✦</div>
-</section>
-
-<section class="content dash-columns"><div class="card dash-card"><div class="section-head dash-head"><h2>Academic snapshot</h2><a href="student-results.html">View full results →</a></div><div id="resultList"><div class="empty">Loading results…</div></div></div><div class="card dash-card"><div class="section-head dash-head"><h2>Latest announcements</h2><a href="student-announcements.html">See all →</a></div><div id="noticeList"><div class="empty">Loading announcements…</div></div></div></section>
-
-<section class="content lower-grid"><div class="card dash-card"><div class="section-head dash-head"><h2>Attendance summary</h2><a href="student-attendance.html">Open attendance →</a></div><div class="attendance-box" id="attendanceBreakdown"><div><b>—</b><span>Present</span></div><div><b>—</b><span>Absent</span></div><div><b>—</b><span>Late</span></div></div></div><div class="card dash-card"><div class="section-head dash-head"><h2>Quick access</h2><span class="muted">Student services</span></div><div class="quick-grid"><a href="student-results.html"><span>▥</span><b>Results</b><small>Academic record</small></a><a href="student-timetable.html"><span>□</span><b>Timetable</b><small>Class schedule</small></a><a href="student-fees.html"><span>₦</span><b>Fees</b><small>Account status</small></a><a href="student-profile.html"><span>♙</span><b>Profile</b><small>Personal details</small></a><a href="student-announcements.html"><span>♢</span><b>Notices</b><small>School updates</small></a><a href="id-card.html"><span>▣</span><b>ID Card</b><small>Digital card</small></a></div></div></section>
+<div id="page-loader" class="portal-page-loader">
+  <div class="portal-loader-inner">
+    <div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School"></div>
+    <div class="portal-loader-title">Laff British Montessori School</div>
+    <p class="portal-loader-sub">Preparing your secure student portal…</p>
+    <div class="portal-loader-bar"><i></i></div>
+  </div>
 </div>
-<footer class="footer">© 2026 Laff British Montessori School · Student Portal</footer>
-</div></main></div><div class="toast"></div>
-<script src="assets/app.js"></script><script type="module" src="assets/dashboard.js"></script>
-<script>window.addEventListener('dashboard-ready',()=>setTimeout(()=>document.getElementById('page-loader')?.classList.add('hide'),250));</script>
-</body></html>
+<div id="student-app"></div>
+<script type="module">
+import { mountStudentShell, supabase, escapeHtml, finishPageLoad } from './assets/app.js';
+
+mountStudentShell({
+  title: 'Dashboard',
+  subtitle: 'Your academic progress, school updates and student services at a glance.',
+  content: `
+    <section class="hero home-hero">
+      <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+      <div class="hero-content"><div class="hero-label">Your learning journey</div><h2 id="schoolName" data-school-name>Laff British Montessori School</h2><p id="schoolMotto" data-school-motto>Learning · Character · Excellence</p><div class="hero-meta"><span class="pill">Session <strong id="sessionName">—</strong></span><span class="pill">Term <strong id="termName">—</strong></span><span class="pill">Status <strong id="studentStatus">ACTIVE</strong></span></div></div>
+      <div class="hero-profile"><div class="hero-profile-top"><span>Student profile</span><span class="hero-status">● Active</span></div><div class="hero-profile-main"><div class="hero-avatar" id="heroAvatar">ST</div><div><h3 id="heroStudentName">Student</h3><p id="heroStudentClass">Class not assigned</p></div></div><div class="hero-profile-foot"><div><span>Registration</span><b id="heroStudentId">—</b></div><div><span>Portal access</span><b>Enabled</b></div></div></div>
+    </section>
+
+    <div id="dashboardLoading" class="dashboard-loading"><span class="loading-dot"></span> Preparing your latest academic information…</div>
+    <div id="dashboardContent" hidden>
+      <section class="grid dash-grid">
+        <div class="stat dash-stat"><div class="stat-top"><span class="label">Published subjects</span><span class="mini">LIVE</span></div><h3 id="subjectsCount">—</h3><p>Results available this term</p><div class="stat-glow"></div></div>
+        <div class="stat dash-stat"><div class="stat-top"><span class="label">Attendance</span><span class="mini">TRACKED</span></div><h3 id="attendancePct">—</h3><p>Recorded attendance</p><div class="stat-glow"></div></div>
+        <div class="stat dash-stat"><div class="stat-top"><span class="label">Term average</span><span class="mini">CURRENT</span></div><h3 id="averagePct">—</h3><p>Published results</p><div class="stat-glow"></div></div>
+        <div class="stat dash-stat fee-stat"><div class="stat-top"><span class="label">Fee balance</span><span class="mini">ACCOUNT</span></div><h3 id="balance">—</h3><p id="balanceLabel">Current balance</p><div class="stat-glow"></div></div>
+      </section>
+
+      <section class="pulse-card" aria-label="Learning pulse">
+        <div class="pulse-copy"><div class="eyebrow">Learning pulse</div><h2>Keep your momentum going.</h2><p>Use your current attendance and published results to stay focused on the term.</p></div>
+        <div class="pulse-metrics"><div class="pulse-metric"><div><span>Attendance</span><b id="pulseAttendance">—</b></div><div class="progress"><i id="attendanceProgress"></i></div></div><div class="pulse-metric"><div><span>Academic average</span><b id="pulseAverage">—</b></div><div class="progress"><i id="averageProgress"></i></div></div><div class="pulse-metric"><div><span>Results published</span><b id="pulseSubjects">—</b></div><div class="progress"><i id="subjectsProgress"></i></div></div></div>
+        <div class="pulse-mark">✦</div>
+      </section>
+
+      <section class="content dash-columns"><div class="card dash-card"><div class="section-head dash-head"><h2>Academic snapshot</h2><a href="student-results.html">View full results →</a></div><div id="resultList"><div class="empty">Loading results…</div></div></div><div class="card dash-card"><div class="section-head dash-head"><h2>Latest announcements</h2><a href="student-announcements.html">See all →</a></div><div id="noticeList"><div class="empty">Loading announcements…</div></div></div></section>
+      <section class="content lower-grid"><div class="card dash-card"><div class="section-head dash-head"><h2>Attendance summary</h2><a href="student-attendance.html">Open attendance →</a></div><div class="attendance-box" id="attendanceBreakdown"><div><b>—</b><span>Present</span></div><div><b>—</b><span>Absent</span></div><div><b>—</b><span>Late</span></div></div></div><div class="card dash-card"><div class="section-head dash-head"><h2>Quick access</h2><span class="muted">Student services</span></div><div class="quick-grid"><a href="student-results.html"><span>▥</span><b>Results</b><small>Academic record</small></a><a href="student-timetable.html"><span>□</span><b>Timetable</b><small>Class schedule</small></a><a href="student-fees.html"><span>₦</span><b>Fees</b><small>Account status</small></a><a href="student-profile.html"><span>♙</span><b>Profile</b><small>Personal details</small></a><a href="student-announcements.html"><span>♢</span><b>Notices</b><small>School updates</small></a><a href="id-card.html"><span>▣</span><b>ID Card</b><small>Digital card</small></a></div></div></section>
+    </div>
+    <div id="dashboardError" class="dashboard-error" hidden></div>
+    <footer class="footer">© 2026 Laff British Montessori School · Student Portal</footer>
+  `
+});
+
+const esc = escapeHtml;
+const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+const setHtml = (id, value) => { const el = document.getElementById(id); if (el) el.innerHTML = value; };
+const setProgress = (id, value) => { const el = document.getElementById(id); if (el) requestAnimationFrame(() => { el.style.width = `${Math.max(0, Math.min(100, Number(value) || 0))}%`; }); };
+const initials = s => `${s?.first_name?.[0] || ''}${s?.last_name?.[0] || ''}`.toUpperCase() || 'ST';
+
+function animateValue(id, end, { suffix='', prefix='', duration=700, decimals=0 }={}) {
+  const el = document.getElementById(id); if (!el) return;
+  const target = Number(end) || 0; const start = performance.now();
+  const frame = now => { const p = Math.min((now - start) / duration, 1); const ease = 1 - Math.pow(1 - p, 3); const value = target * ease; el.textContent = prefix + (decimals ? value.toFixed(decimals) : Math.round(value).toLocaleString('en-NG')) + suffix; if (p < 1) requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+
+function storagePathFromPhoto(value) {
+  if (!value) return null; const raw = String(value).trim(); if (!/^https?:\/\//i.test(raw)) return raw;
+  try { const u = new URL(raw); const marker = '/student-passports/'; const at = u.pathname.indexOf(marker); if (at >= 0) return decodeURIComponent(u.pathname.slice(at + marker.length)); } catch {}
+  return null;
+}
+
+async function getStudentPhotoUrl(photoValue) {
+  if (!photoValue) return null; const raw = String(photoValue).trim(); const path = storagePathFromPhoto(raw); if (!path) return raw;
+  try { const { data, error } = await supabase.storage.from('student-passports').createSignedUrl(path, 60 * 60 * 6); if (!error && data?.signedUrl) return data.signedUrl; } catch (error) { console.warn('Student passport signing failed', error); }
+  return null;
+}
+
+function putAvatar(id, url, fallback) {
+  const el = document.getElementById(id); if (!el) return;
+  if (!url) { el.textContent = fallback; return; }
+  el.innerHTML = `<img src="${esc(url)}" alt="Student passport photograph" loading="eager" decoding="async">`;
+  el.querySelector('img')?.addEventListener('error', () => { el.textContent = fallback; }, { once: true });
+}
+
+async function loadDashboard() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { location.href = 'student-login.html'; return; }
+    const uid = session.user.id;
+    const [{ data: student, error: studentError }, { data: school }, { data: currentSession }, { data: currentTerm }] = await Promise.all([
+      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,status').eq('user_id', uid).maybeSingle(),
+      supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website').limit(1).maybeSingle(),
+      supabase.from('academic_sessions').select('id,name').eq('is_current', true).order('starts_on', { ascending:false }).limit(1).maybeSingle(),
+      supabase.from('terms').select('id,name,session_id').eq('is_current', true).order('starts_on', { ascending:false }).limit(1).maybeSingle()
+    ]);
+    if (studentError || !student) throw new Error('Your student profile has not been created yet. Please contact the school administrator.');
+    const sessionRow = Array.isArray(currentSession) ? currentSession[0] : currentSession;
+    const termRow = Array.isArray(currentTerm) ? currentTerm[0] : currentTerm;
+    const { data: enrollment } = await supabase.from('enrollments').select('id,class_id,status,classes(name)').eq('student_id', student.id).eq('session_id', sessionRow?.id || '').eq('status','ACTIVE').order('created_at',{ascending:false}).limit(1).maybeSingle();
+    const className = enrollment?.classes?.name || 'Class not assigned';
+    const [{ data: results }, { data: attendance }, { data: announcements }, { data: fees }, { data: payments }] = await Promise.all([
+      enrollment && termRow?.id ? supabase.from('results').select('subject_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,subjects(name)').eq('enrollment_id', enrollment.id).eq('term_id', termRow.id).eq('status','PUBLISHED').order('total',{ascending:false}) : Promise.resolve({data:[]} ),
+      enrollment ? supabase.from('attendance').select('status').eq('enrollment_id', enrollment.id) : Promise.resolve({data:[]} ),
+      supabase.from('announcements').select('id,title,body,published_at,created_at').eq('published',true).order('published_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(12),
+      supabase.from('fees').select('id,title,amount,due_date').eq('student_id',student.id).eq('session_id',sessionRow?.id || ''),
+      supabase.from('payments').select('amount,status').eq('student_id',student.id).eq('status','PAID')
+    ]);
+    const resultRows = results || [], att = attendance || [];
+    const present = att.filter(x => x.status === 'PRESENT').length, late = att.filter(x => x.status === 'LATE').length, absent = att.filter(x => x.status === 'ABSENT').length, totalAtt = att.length;
+    const attendancePct = totalAtt ? Math.round(((present + late * .5) / totalAtt) * 100) : 0;
+    const average = resultRows.length ? Math.round(resultRows.reduce((sum, row) => sum + Number(row.total || 0), 0) / resultRows.length) : 0;
+    const totalFees = (fees || []).reduce((sum, fee) => sum + Number(fee.amount || 0), 0), paid = (payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0), balance = Math.max(totalFees - paid, 0);
+
+    set('heroStudentName', `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student');
+    set('heroStudentClass', className); set('heroStudentId', student.student_id || '—'); set('sessionName', sessionRow?.name || '—'); set('termName', (termRow?.name || '—').replaceAll('_',' ')); set('studentStatus', student.status || 'ACTIVE');
+    if (school) { set('schoolName', school.school_name || 'Laff British Montessori School'); set('schoolMotto', school.motto || 'Learning · Character · Excellence'); }
+    const photoUrl = await getStudentPhotoUrl(student.photo_url); putAvatar('heroAvatar', photoUrl, initials(student)); putAvatar('shellAvatar', photoUrl, initials(student));
+    set('shellName', `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student'); set('shellStudentId', student.student_id || '—'); set('shellClass', className);
+    set('balanceLabel', balance ? 'Outstanding balance' : 'No outstanding balance');
+    setHtml('resultList', resultRows.slice(0,4).map(row => `<div class="dash-row"><div><b>${esc(row.subjects?.name || 'Subject')}</b><span class="muted">CA ${Number(row.ca_score||0)} · Exam ${Number(row.exam_score||0)} · Total ${Number(row.total||0)}</span></div><span class="grade-badge">${esc(row.grade || '—')}</span></div>`).join('') || '<div class="empty">No published results are available for this term yet.</div>');
+    setHtml('noticeList', (announcements || []).slice(0,4).map(a => `<article class="notice-item"><span class="notice-icon">◆</span><div><b>${esc(a.title)}</b><p>${esc((a.body || '').slice(0,115))}${(a.body || '').length > 115 ? '…' : ''}</p><small>${a.published_at ? new Date(a.published_at).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}) : ''}</small></div></article>`).join('') || '<div class="empty">No new announcements.</div>');
+    window.__studentNotifications = announcements || [];
+    window.dispatchEvent(new CustomEvent('student-notifications-ready', { detail: window.__studentNotifications }));
+    setHtml('attendanceBreakdown', `<div><b>${present}</b><span>Present</span></div><div><b>${absent}</b><span>Absent</span></div><div><b>${late}</b><span>Late</span></div>`);
+    animateValue('subjectsCount', resultRows.length); animateValue('attendancePct', attendancePct, { suffix:'%' }); animateValue('averagePct', average, { suffix:'%' }); animateValue('balance', balance, { prefix:'₦', decimals:2, duration:900 });
+    set('pulseAttendance', `${attendancePct}%`); set('pulseAverage', `${average}%`); set('pulseSubjects', `${resultRows.length} subject${resultRows.length === 1 ? '' : 's'}`);
+    setProgress('attendanceProgress', attendancePct); setProgress('averageProgress', average); setProgress('subjectsProgress', Math.min(resultRows.length * 10, 100));
+    document.getElementById('dashboardLoading')?.remove(); const content = document.getElementById('dashboardContent'); if (content) content.hidden = false;
+    window.dispatchEvent(new CustomEvent('dashboard-ready')); finishPageLoad(280);
+  } catch (error) {
+    console.error(error);
+    document.getElementById('dashboardLoading')?.remove();
+    const box = document.getElementById('dashboardError');
+    if (box) { box.hidden = false; box.innerHTML = `<strong>Dashboard could not load</strong><p>${esc(error.message)}</p><a class="button" href="student-login.html">Return to Login</a>`; }
+    window.dispatchEvent(new CustomEvent('dashboard-ready')); finishPageLoad(280);
+  }
+}
+loadDashboard();
+</script>
+</body>
+</html>
