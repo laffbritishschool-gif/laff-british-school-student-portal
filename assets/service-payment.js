@@ -27,7 +27,8 @@ export async function verifyPaymentFromUrl(serviceCode){
 export async function startServicePayment(serviceCode){
  const {data:{session}}=await supabase.auth.getSession();
  if(!session)throw new Error('Your session has expired. Please sign in again.');
- const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action:'initialize',service_code:serviceCode,callback_url:`${location.origin}${location.pathname}`})});
+ const callback=`${location.origin}${location.pathname.replace(/[^/]+$/,'')}payment-receipt.html?service=${encodeURIComponent(serviceCode)}`;
+ const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action:'initialize',service_code:serviceCode,callback_url:callback})});
  const payload=await res.json();
  if(!res.ok)throw new Error(payload.error||'Could not start payment.');
  if(payload.paid)return payload;
