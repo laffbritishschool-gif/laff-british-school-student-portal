@@ -109,10 +109,11 @@ function setupLoader() {
     return loader;
   }
   if (document.body.classList.contains('login-page')) return null;
+  const settings = getCachedSchoolSettings();
   loader = document.createElement('div');
   loader.id = 'portalPageLoader';
   loader.className = 'portal-page-loader';
-  loader.innerHTML = `<div class="portal-loader-inner"><div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="${escapeHtml(getCachedSchoolSettings().logo_url)}" alt="School logo"></div><div class="portal-loader-title">${escapeHtml(getCachedSchoolSettings().school_name)}</div><p class="portal-loader-sub">Loading your student portal…</p><div class="portal-loader-bar"><i></i></div></div>`;
+  loader.innerHTML = `<div class="portal-loader-inner"><div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="${escapeHtml(settings.logo_url)}" alt="School logo"></div><div class="portal-loader-title">${escapeHtml(settings.school_name)}</div><p class="portal-loader-sub">Loading your student portal…</p><div class="portal-loader-bar"><i></i></div></div>`;
   document.body.prepend(loader);
   window.__portalLoader = loader;
   return loader;
@@ -315,7 +316,6 @@ export function mountStudentShell({ title = 'Student Portal', subtitle = '', con
   if (!app) return;
   const settings = getCachedSchoolSettings();
   app.innerHTML = `<div class="app"><main class="main"><header class="top"><div><div class="eyebrow">STUDENT PORTAL</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="shellAvatar">ST</div><div><b id="shellName">Student</b><div class="muted"><span id="shellStudentId">—</span> · <span id="shellClass">—</span></div></div></div></div></header>${content}</main></div>`;
-  const main = app.querySelector('.main');
   const shell = document.createElement('div');
   shell.innerHTML = renderSidebar(settings);
   app.querySelector('.app')?.prepend(shell.firstElementChild);
@@ -348,6 +348,10 @@ function boot() {
     if (!document.getElementById('notificationCenter')?.hidden) renderNotifications(window.__studentNotifications);
   });
   window.addEventListener('school-settings-updated', refreshShellSettings);
+  // Always release the loader after the page finishes loading, even if a page-specific
+  // module forgets to call finishPageLoad() or its data request fails.
+  window.addEventListener('load', () => finishPageLoad(250), { once: true });
+  setTimeout(() => finishPageLoad(150), 12000);
 }
 
 document.addEventListener('DOMContentLoaded', boot);
