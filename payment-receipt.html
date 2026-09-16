@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment Receipt | Laff British Montessori School</title>
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/service-payment.css">
+<style>
+body{min-height:100vh;margin:0;display:grid;place-items:center;background:linear-gradient(135deg,#071a46,#0d4fa8);font-family:Inter,system-ui,sans-serif}.receipt{width:min(92%,520px);background:#fff;border-radius:28px;padding:42px 30px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.25)}.mark{width:78px;height:78px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:#e9f8ee;color:#168447;font-size:42px;font-weight:900}.receipt h1{margin:0 0 10px;color:#09275e}.receipt p{color:#65748b;line-height:1.6}.receipt-meta{margin:24px 0;padding:18px;border-radius:18px;background:#f5f8fc;text-align:left}.receipt-meta div{display:flex;justify-content:space-between;gap:15px;padding:7px 0}.receipt-meta span{color:#738096}.receipt-meta strong{color:#102d61;text-align:right}.count{font-size:13px;color:#8490a3;margin-top:20px}.error .mark{background:#fff0f0;color:#c52f2f}
+</style>
+</head>
+<body>
+<main class="receipt" id="receipt"><div class="mark" id="mark">✓</div><h1 id="title">Payment received</h1><p id="message">We're verifying your Paystack payment and preparing your receipt.</p><div class="receipt-meta" id="meta" hidden></div><div class="count" id="count">Please wait…</div></main>
+<script type="module">
+import { supabase } from './assets/supabase.js';
+import { verifyPaymentFromUrl } from './assets/service-payment.js';
+const service=new URLSearchParams(location.search).get('service')||'RESULT_ACCESS';
+const allowed={RESULT_ACCESS:{name:'Result Access',returnTo:'student-results.html'},ID_CARD:{name:'Digital ID Card',returnTo:'id-card.html'}};
+const cfg=allowed[service]||allowed.RESULT_ACCESS;
+const $=id=>document.getElementById(id);
+async function run(){
+ try{
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session) throw new Error('Your session has expired. Please sign in again.');
+  const result=await verifyPaymentFromUrl(service);
+  if(!result?.paid) throw new Error('The payment could not be verified as successful.');
+  $('message').textContent='Your payment has been verified successfully. Your access is now unlocked.';
+  $('meta').hidden=false;
+  $('meta').innerHTML=`<div><span>Service</span><strong>${cfg.name}</strong></div><div><span>Reference</span><strong>${result.reference||'Verified'}</strong></div><div><span>Status</span><strong>PAID</strong></div>`;
+  let seconds=3;$('count').textContent=`Returning to ${cfg.name} in ${seconds}s…`;
+  const timer=setInterval(()=>{seconds--;if(seconds>0)$('count').textContent=`Returning to ${cfg.name} in ${seconds}s…`;else{clearInterval(timer);location.href=cfg.returnTo}},1000);
+ }catch(error){
+  $('receipt').classList.add('error');$('mark').textContent='!';$('title').textContent='Payment verification issue';$('message').textContent=error.message||'We could not verify this payment.';$('count').textContent='Please return to the payment page and try again.';
+ }
+}
+run();
+</script>
+</body>
+</html>
