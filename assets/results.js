@@ -1,8 +1,8 @@
-import { supabase } from './supabase.js';
+import { supabase, escapeHtml } from './app.js';
 import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMarkup } from './service-payment.js';
 
 const SERVICE='RESULT_ACCESS';
-const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const esc=escapeHtml;
 const text=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v??'—'};
 const html=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v};
 const show=(id,on=true)=>{const e=document.getElementById(id);if(e)e.hidden=!on};
@@ -20,13 +20,51 @@ async function requirePayment(){
   if(state)state.innerHTML=`<strong>Payment verification needs attention</strong><span>${esc(err.message||'Please try again.')}</span>`;
   return false;
  }
- try{if(await servicePaid(SERVICE))return true;}catch(err){console.warn('Paid-status check failed:',err)}
+ try{if(await servicePaid(SERVICE))return true}catch(err){console.warn('Paid-status check failed:',err)}
  const {data:setting,error}=await supabase.from('student_service_settings').select('title,amount,is_active').eq('service_code',SERVICE).maybeSingle();
  if(error)throw error;
  if(!setting?.is_active){state.innerHTML='<strong>Result access is currently unavailable</strong><span>Please contact the school office for assistance.</span>';return false}
  state.innerHTML=paymentGateMarkup({title:'Unlock Your Published Results',description:'A verified result-access payment is required before your academic result sheet can be viewed or printed.',amount:setting.amount});
  document.getElementById('servicePayButton')?.addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Opening secure checkout…';try{await startServicePayment(SERVICE)}catch(err){b.disabled=false;b.textContent='Pay & Continue';state.insertAdjacentHTML('beforeend',`<div class="service-payment-success" style="background:#fdeaea;color:#9b2c2c;margin-top:14px">${esc(err.message)}</div>`)}});
  return false;
+}
+
+function storagePathFromPhoto(value){
+ if(!value)return null;
+ const raw=String(value).trim();
+ if(!/^https?:\/\//i.test(raw))return raw;
+ try{
+  const u=new URL(raw);
+  const marker='/student-passports/';
+  const at=u.pathname.indexOf(marker);
+  if(at>=0)return decodeURIComponent(u.pathname.slice(at+marker.length));
+ }catch{}
+ return null;
+}
+
+async function getStudentPhotoUrl(photoValue){
+ if(!photoValue)return null;
+ const raw=String(photoValue).trim();
+ const path=storagePathFromPhoto(raw);
+ if(!path)return raw;
+ try{
+  const {data,error}=await supabase.storage.from('student-passports').createSignedUrl(path,60*60*6);
+  if(!error&&data?.signedUrl)return data.signedUrl;
+ }catch(error){console.warn('Student passport signing failed',error)}
+ return null;
+}
+
+function setShellStudent({student,fullName,className,sessionName,termName,photoUrl}){
+ const fallback=(fullName||'Student').split(/\s+/).map(v=>v[0]||'').join('').slice(0,2).toUpperCase()||'ST';
+ text('shellName',fullName||'Student');
+ text('shellStudentId',student?.student_id||'—');
+ text('shellClass',className||'—');
+ const shellAvatar=document.getElementById('shellAvatar');
+ if(!shellAvatar)return;
+ if(photoUrl){
+  shellAvatar.innerHTML=`<img src="${esc(photoUrl)}" alt="Student passport photograph" loading="eager" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`;
+  shellAvatar.querySelector('img')?.addEventListener('error',()=>{shellAvatar.textContent=fallback},{once:true});
+ }else shellAvatar.textContent=fallback;
 }
 
 async function loadResults(){
@@ -36,7 +74,7 @@ async function loadResults(){
   const paid=await requirePayment();if(!paid)return;
   const uid=session.user.id;
   const [{data:student,error:studentError},{data:school},{data:currentSession},{data:currentTerm}]=await Promise.all([
-   supabase.from('students').select('id,student_id,first_name,middle_name,last_name,school_email,exam_number,status').eq('user_id',uid).maybeSingle(),
+   supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,exam_number,status').eq('user_id',uid).maybeSingle(),
    supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website').limit(1).maybeSingle(),
    supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle(),
    supabase.from('terms').select('id,name,session_id').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle()
@@ -44,8 +82,12 @@ async function loadResults(){
   if(studentError)throw studentError;if(!student)throw new Error('Your student profile is not available. Please contact the school.');
   const fullName=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||'Student';const sessionRow=currentSession?.[0]||currentSession;const termRow=currentTerm?.[0]||currentTerm;
   const {data:enrollment,error:enrollError}=await supabase.from('enrollments').select('id,class_id,status,classes(name)').eq('student_id',student.id).eq('session_id',sessionRow?.id||'').in('status',['ACTIVE','COMPLETED','PROMOTED']).order('created_at',{ascending:false}).limit(1).maybeSingle();if(enrollError)throw enrollError;
-  const className=enrollment?.classes?.name||'—';const {data:rows,error:resultError}=enrollment&&termRow?.id?await supabase.from('results').select('id,subject_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,principal_remark,position,status,subjects(name)').eq('enrollment_id',enrollment.id).eq('term_id',termRow.id).eq('status','PUBLISHED').order('subject_id',{ascending:true}):{data:[],error:null};if(resultError)throw resultError;
-  const results=rows||[];const avg=results.length?results.reduce((s,r)=>s+Number(r.total||0),0)/results.length:0;const positions=results.map(r=>Number(r.position||0)).filter(Boolean);const position=positions.length?Math.min(...positions):null;const teacherRemarks=[...new Set(results.map(r=>r.teacher_remark).filter(Boolean))];const principalRemarks=[...new Set(results.map(r=>r.principal_remark).filter(Boolean))];const schoolName=school?.school_name||'Laff British Montessori School';const logo=school?.logo_url||'https://i.ibb.co/whtP8S5v/image.png';const termName=(termRow?.name||'').replaceAll('_',' ')||'—';
+  const className=enrollment?.classes?.name||'—';
+  const termName=(termRow?.name||'').replaceAll('_',' ')||'—';
+  const photoUrl=await getStudentPhotoUrl(student.photo_url);
+  setShellStudent({student,fullName,className,sessionName:sessionRow?.name||'—',termName,photoUrl});
+  const {data:rows,error:resultError}=enrollment&&termRow?.id?await supabase.from('results').select('id,subject_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,principal_remark,position,status,subjects(name)').eq('enrollment_id',enrollment.id).eq('term_id',termRow.id).eq('status','PUBLISHED').order('subject_id',{ascending:true}):{data:[],error:null};if(resultError)throw resultError;
+  const results=rows||[];const avg=results.length?results.reduce((s,r)=>s+Number(r.total||0),0)/results.length:0;const positions=results.map(r=>Number(r.position||0)).filter(Boolean);const position=positions.length?Math.min(...positions):null;const teacherRemarks=[...new Set(results.map(r=>r.teacher_remark).filter(Boolean))];const principalRemarks=[...new Set(results.map(r=>r.principal_remark).filter(Boolean))];const schoolName=school?.school_name||'Laff British Montessori School';const logo=school?.logo_url||'https://i.ibb.co/whtP8S5v/image.png';
   text('heroSchoolName',schoolName);text('schoolName',schoolName);text('heroMotto',school?.motto||'Excellence · Character · Confidence · Knowledge');text('heroStudent',fullName);text('heroStudentId',student.student_id);text('heroClass',className);text('heroSessionTerm',`${sessionRow?.name||'—'} · ${termName}`);text('studentName',fullName);text('studentId',student.student_id);text('className',className);text('studentStatus',student.status||'ACTIVE');text('examNo',student.exam_number||'—');text('sessionName',sessionRow?.name||'—');text('termName',termName);text('resultStatus',results.length?'Published':'Not Published');text('reportSession',`${sessionRow?.name||'—'} Academic Session`);text('reportTerm',termName);
   const contact=[school?.address,school?.phone].filter(Boolean).join(' · ');const contact2=[school?.email,school?.website].filter(Boolean).join(' · ');text('schoolContact',[contact,contact2].filter(Boolean).join('\n')||'School contact details');['heroLogo','sheetLogo'].forEach(id=>{const e=document.getElementById(id);if(e)e.src=logo});
   if(!results.length){state.innerHTML='<strong>No published result yet</strong><span>Your result for the current session and term has not been published.</span>';return}
