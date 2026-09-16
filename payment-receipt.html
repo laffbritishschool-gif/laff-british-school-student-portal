@@ -1,40 +1,21 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Payment Receipt | Laff British Montessori School</title>
 <link rel="stylesheet" href="assets/styles.css">
-<link rel="stylesheet" href="assets/service-payment.css">
-<style>
-body{min-height:100vh;margin:0;display:grid;place-items:center;background:linear-gradient(135deg,#071a46,#0d4fa8);font-family:Inter,system-ui,sans-serif}.receipt{width:min(92%,560px);background:#fff;border-radius:28px;padding:42px 30px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.25)}.mark{width:78px;height:78px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:#e9f8ee;color:#168447;font-size:42px;font-weight:900}.receipt h1{margin:0 0 10px;color:#09275e}.receipt p{color:#65748b;line-height:1.6}.receipt-meta{margin:24px 0;padding:18px;border-radius:18px;background:#f5f8fc;text-align:left}.receipt-meta div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;border-bottom:1px solid #e8edf4}.receipt-meta div:last-child{border-bottom:0}.receipt-meta span{color:#738096}.receipt-meta strong{color:#102d61;text-align:right;word-break:break-word}.receipt-actions{display:flex;gap:10px;margin-top:20px}.receipt-actions .button{flex:1;justify-content:center}.count{font-size:12px;color:#8490a3;margin-top:16px}.error .mark{background:#fff0f0;color:#c52f2f}@media(max-width:520px){.receipt{padding:32px 20px}.receipt-actions{flex-direction:column}}
-</style>
+<link rel="stylesheet" href="assets/service-payment.css?v=4">
+<style>body{min-height:100vh;margin:0;display:grid;place-items:center;background:linear-gradient(135deg,#071a46,#0d4fa8);font-family:Inter,system-ui,sans-serif}.receipt{width:min(92%,560px);background:#fff;border-radius:28px;padding:42px 30px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.25)}.mark{width:78px;height:78px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:#e9f8ee;color:#168447;font-size:42px;font-weight:900}.receipt h1{margin:0 0 10px;color:#09275e}.receipt p{color:#65748b;line-height:1.6}.receipt-meta{margin:24px 0;padding:18px;border-radius:18px;background:#f5f8fc;text-align:left}.receipt-meta div{display:flex;justify-content:space-between;gap:15px;padding:8px 0;border-bottom:1px solid #e8edf4}.receipt-meta div:last-child{border-bottom:0}.receipt-meta span{color:#738096}.receipt-meta strong{color:#102d61;text-align:right;word-break:break-word}.receipt-actions{display:flex;gap:10px;margin-top:20px}.receipt-actions .button{flex:1;justify-content:center}.count{font-size:12px;color:#8490a3;margin-top:16px}.error .mark{background:#fff0f0;color:#c52f2f}@media(max-width:520px){.receipt{padding:32px 20px}.receipt-actions{flex-direction:column}}</style>
 </head>
-<body>
-<main class="receipt" id="receipt"><div class="mark" id="mark">✓</div><h1 id="title">Payment received</h1><p id="message">We're verifying your Paystack payment and preparing your receipt.</p><div class="receipt-meta" id="meta" hidden></div><div class="receipt-actions" id="actions" hidden><a class="button yellow" id="continueButton" href="#">Continue to Result</a><button class="button" id="printButton" type="button">Print Receipt</button></div><div class="count" id="count">Please wait…</div></main>
+<body><main class="receipt" id="receipt"><div class="mark" id="mark">✓</div><h1 id="title">Payment Receipt</h1><p id="message">Loading your published receipt from Supabase…</p><div class="receipt-meta" id="meta" hidden></div><div class="receipt-actions" id="actions" hidden><a class="button yellow" id="continueButton" href="#">Continue</a><button class="button" id="printButton" type="button">Print Receipt</button></div><div class="count" id="count">Please wait…</div></main>
 <script type="module">
 import { supabase } from './assets/supabase.js';
-import { verifyPaymentFromUrl } from './assets/service-payment.js';
-const service=new URLSearchParams(location.search).get('service')||'RESULT_ACCESS';
-const allowed={RESULT_ACCESS:{name:'Result Access',returnTo:'student-results.html',button:'Continue to Result'},ID_CARD:{name:'Digital ID Card',returnTo:'id-card.html',button:'Continue to ID Card'}};
-const cfg=allowed[service]||allowed.RESULT_ACCESS;
-const $=id=>document.getElementById(id);
-async function run(){
- try{
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session) throw new Error('Your session has expired. Please sign in again.');
-  const result=await verifyPaymentFromUrl(service);
-  if(!result?.paid) throw new Error('The payment could not be verified as successful.');
-  $('message').textContent='Your payment has been verified successfully. Keep this receipt for your records.';
-  $('meta').hidden=false;
-  $('meta').innerHTML=`<div><span>Service</span><strong>${cfg.name}</strong></div><div><span>Reference</span><strong>${result.reference||'Verified'}</strong></div><div><span>Status</span><strong>PAID</strong></div>`;
-  $('continueButton').textContent=cfg.button;$('continueButton').href=cfg.returnTo;$('actions').hidden=false;$('count').textContent='Payment verified · You can continue whenever you are ready.';
-  $('printButton').addEventListener('click',()=>window.print());
- }catch(error){
-  $('receipt').classList.add('error');$('mark').textContent='!';$('title').textContent='Payment verification issue';$('message').textContent=error.message||'We could not verify this payment.';$('count').textContent='Please return to the payment page and try again.';
- }
-}
-run();
-</script>
-</body>
-</html>
+const $=id=>document.getElementById(id);const service=new URLSearchParams(location.search).get('service')||'RESULT_ACCESS';
+const cfg=service==='ID_CARD'||service==='ID_CARD_ACCESS'?{code:'ID_CARD',name:'Digital ID Card',returnTo:'id-card.html',button:'Continue to ID Card'}:{code:'RESULT_ACCESS',name:'Result Access',returnTo:'student-results.html',button:'Continue to Result'};
+function fail(message){$('receipt').classList.add('error');$('mark').textContent='!';$('title').textContent='Receipt not available';$('message').textContent=message;$('count').textContent='Please return to the payment page and try again.'}
+async function run(){try{const{data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Your session has expired. Please sign in again.');const params=new URLSearchParams(location.search);const reference=params.get('reference')||params.get('trxref')||params.get('payment_reference');if(!reference)throw new Error('No payment reference was provided.');
+ let{data:receipt,error}=await supabase.from('student_payment_receipts').select('receipt_number,service_code,reference,amount,currency,status,paid_at,customer_email,receipt_data').eq('reference',reference).eq('status','PAID').maybeSingle();
+ if(error)throw error;if(!receipt){await new Promise(r=>setTimeout(r,1500));({data:receipt,error}=await supabase.from('student_payment_receipts').select('receipt_number,service_code,reference,amount,currency,status,paid_at,customer_email,receipt_data').eq('reference',reference).eq('status','PAID').maybeSingle());if(error)throw error}
+ if(!receipt)throw new Error('Your payment was received, but the receipt is still being published. Please refresh this page in a moment.');
+ const studentName=receipt.receipt_data?.student_name||'Student';$('message').textContent='Your payment receipt has been published and verified in the school payment system.';$('meta').hidden=false;$('meta').innerHTML=`<div><span>Student</span><strong>${studentName}</strong></div><div><span>Service</span><strong>${cfg.name}</strong></div><div><span>Receipt No.</span><strong>${receipt.receipt_number}</strong></div><div><span>Reference</span><strong>${receipt.reference}</strong></div><div><span>Amount</span><strong>₦${Number(receipt.amount).toLocaleString('en-NG')}</strong></div><div><span>Status</span><strong>PAID</strong></div><div><span>Paid At</span><strong>${new Date(receipt.paid_at).toLocaleString('en-NG')}</strong></div>`;$('continueButton').textContent=cfg.button;$('continueButton').href=cfg.returnTo;$('actions').hidden=false;$('count').textContent='Receipt published by Supabase · Payment confirmed.';$('printButton').addEventListener('click',()=>window.print());}catch(error){fail(error.message||'We could not load your receipt.')}}run();
+</script></body></html>
