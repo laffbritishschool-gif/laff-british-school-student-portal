@@ -7,7 +7,7 @@
 <link rel="icon" href="https://i.ibb.co/whtP8S5v/image.png">
 <title>My Profile | Laff British Montessori School</title>
 <link rel="stylesheet" href="assets/styles.css">
-<link rel="stylesheet" href="assets/portal-polish.css?v=7">
+<link rel="stylesheet" href="assets/portal-polish.css?v=8">
 <style>
 .profile-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:150px 1fr auto;gap:24px;align-items:center;background:linear-gradient(135deg,#063b78,#0b5ed7 68%,#0a4d91);color:#fff;border-radius:28px;padding:30px;box-shadow:0 22px 50px rgba(11,94,215,.2)}
 .profile-hero:before,.profile-hero:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.1);border-radius:50%;pointer-events:none}.profile-hero:before{width:300px;height:300px;right:-115px;top:-150px}.profile-hero:after{width:190px;height:190px;right:-60px;top:-95px}
@@ -101,9 +101,42 @@ mountStudentShell({
   `
 });
 
-const esc=v=>String(v??'').replace(/[&<>\\\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));
+const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));
 const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v||'—'};
 const initials=s=>`${s?.first_name?.[0]||''}${s?.last_name?.[0]||''}`.toUpperCase()||'ST';
+const setAvatar=(el,url,fallback)=>{
+  if(!el)return;
+  if(url){
+    el.innerHTML=`<img src="${esc(url)}" alt="Student passport photograph" loading="eager" decoding="async">`;
+    const img=el.querySelector('img');
+    img.addEventListener('error',()=>{el.textContent=fallback},{once:true});
+  }else el.textContent=fallback;
+};
+
+function storagePathFromPhoto(value){
+  if(!value)return null;
+  const raw=String(value).trim();
+  if(!/^https?:\/\//i.test(raw))return raw;
+  try{
+    const u=new URL(raw);
+    const marker='/student-passports/';
+    const at=u.pathname.indexOf(marker);
+    if(at>=0)return decodeURIComponent(u.pathname.slice(at+marker.length));
+  }catch{}
+  return null;
+}
+
+async function getStudentPhotoUrl(photoValue){
+  if(!photoValue)return null;
+  const raw=String(photoValue).trim();
+  const path=storagePathFromPhoto(raw);
+  if(!path)return raw;
+  try{
+    const {data,error}=await supabase.storage.from('student-passports').createSignedUrl(path,60*60*6);
+    if(!error&&data?.signedUrl)return data.signedUrl;
+  }catch(error){console.warn('Student passport signing failed',error)}
+  return null;
+}
 
 async function loadProfile(){
   const loading=document.getElementById('profileLoading');
@@ -125,10 +158,15 @@ async function loadProfile(){
     const className=enrollment?.classes?.name||'Class not assigned';
     const name=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||profile?.full_name||'Student';
     const schoolEmail=student.school_email||session.user.email||'—';
+    const fallback=initials(student);
+
     set('studentName',name);set('fullName',name);set('studentId',student.student_id);set('schoolEmail',schoolEmail);set('examNumber',student.exam_number);set('gender',student.gender);set('phone',student.phone);set('className',className);set('sessionName',sessionRow?.name);set('termName',(termRow?.name||'').replaceAll('_',' '));set('enrollmentStatus',enrollment?.status||'Not enrolled');set('studentStatus',student.status);set('summaryId',student.student_id);set('summaryEmail',schoolEmail);set('classChip',`Class ${className}`);set('sessionChip',`Session ${sessionRow?.name||'—'}`);set('termChip',`Term ${(termRow?.name||'—').replaceAll('_',' ')}`);set('statusChip',`● ${student.status||'ACTIVE'}`);set('identityLine',`${student.student_id||'—'} · ${schoolEmail}`);
-    const avatar=document.getElementById('avatar');
-    if(student.photo_url){avatar.innerHTML=`<img src="${esc(student.photo_url)}" alt="Student passport photograph" loading="eager">`;const img=avatar.querySelector('img');img.addEventListener('error',()=>{avatar.textContent=initials(student)},{once:true});}
-    else avatar.textContent=initials(student);
+
+    const photoUrl=await getStudentPhotoUrl(student.photo_url);
+    setAvatar(document.getElementById('avatar'),photoUrl,fallback);
+    setAvatar(document.getElementById('shellAvatar'),photoUrl,fallback);
+    set('shellName',name);set('shellStudentId',student.student_id);set('shellClass',className);
+
     if(school?.school_name)document.title=`My Profile | ${school.school_name}`;
     document.getElementById('profileLoading').hidden=true;document.getElementById('profileContent').hidden=false;
   }catch(e){
