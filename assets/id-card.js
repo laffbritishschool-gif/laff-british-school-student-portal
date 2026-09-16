@@ -1,5 +1,5 @@
 import { supabase } from './supabase.js';
-import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMarkup } from './service-payment.js?v=7';
+import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMarkup } from './service-payment.js?v=8';
 const SERVICE='ID_CARD';
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 function addPaymentCss(){if(document.querySelector('link[data-service-payment]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='assets/service-payment.css?v=7';l.dataset.servicePayment='1';document.head.appendChild(l)}
