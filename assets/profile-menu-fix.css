@@ -1,0 +1,7 @@
+/* Keep the student profile dropdown above dashboard content. */
+.main{overflow:visible!important}
+.top{position:relative!important;z-index:1200!important;overflow:visible!important}
+.top-actions{position:relative!important;z-index:1210!important}
+.profile-chip{position:relative!important;z-index:1220!important;overflow:visible!important}
+.profile-menu{z-index:100000!important;pointer-events:none}
+.profile-menu.show{pointer-events:auto}
