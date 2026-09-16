@@ -1,5 +1,5 @@
 import { supabase, escapeHtml } from './app.js';
-import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMarkup } from './service-payment.js?v=7';
+import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMarkup } from './service-payment.js?v=8';
 const SERVICE='RESULT_ACCESS';
 let paymentVerifiedThisVisit=false;
 const esc=escapeHtml;
