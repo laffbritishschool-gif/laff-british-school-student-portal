@@ -12,29 +12,31 @@ const DEFAULT_SCHOOL_SETTINGS = {
   school_name: 'Laff British Montessori School',
   motto: 'Learning · Character · Excellence',
   logo_url: 'https://i.ibb.co/whtP8S5v/image.png',
-  primary_color: '#0755a5',
-  secondary_color: '#f7c928',
+  primary_color: '#123d8f',
+  secondary_color: '#f4c400',
   ui_settings: { navigation: 'sidebar', theme: 'light', compact_sidebar: false, show_breadcrumbs: true }
 };
 
+// SINGLE SOURCE OF TRUTH FOR THE ENTIRE STUDENT PORTAL SIDEBAR.
+// Change this array or the renderSidebar() markup once and every page updates automatically.
 const STUDENT_NAV = [
-  ['index.html','Dashboard','⌂'],
-  ['student-profile.html','My Profile','♙'],
-  ['student-results.html','Results','▥'],
-  ['student-attendance.html','Attendance','✓'],
-  ['student-timetable.html','Timetable','□'],
-  ['student-announcements.html','Announcements','♢'],
-  ['student-fees.html','Fees & Payments','₦'],
-  ['id-card.html','My ID Card','▣']
+  ['index.html', 'Dashboard', '⌂'],
+  ['student-profile.html', 'My Profile', '♙'],
+  ['student-results.html', 'Results', '▥'],
+  ['student-attendance.html', 'Attendance', '✓'],
+  ['student-timetable.html', 'Timetable', '□'],
+  ['student-announcements.html', 'Announcements', '♢'],
+  ['student-fees.html', 'Fees & Payments', '₦'],
+  ['id-card.html', 'My ID Card', '▣']
 ];
 
-export function escapeHtml(value='') {
-  return String(value).replace(/[&<>'"]/g, char => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'
+export function escapeHtml(value = '') {
+  return String(value).replace(/[&<>'\"]/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
   }[char] || char));
 }
 
-export function toast(message, type='success') {
+export function toast(message, type = 'success') {
   let host = document.querySelector('#toast-host');
   if (!host) { host = document.createElement('div'); host.id = 'toast-host'; document.body.appendChild(host); }
   const el = document.createElement('div');
@@ -45,13 +47,13 @@ export function toast(message, type='success') {
   setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 250); }, 3000);
 }
 
-export function pageLoading(show=true) {
+export function pageLoading(show = true) {
   const loader = document.querySelector('#page-loader, #portalPageLoader');
   document.body.classList.toggle('is-loading', show);
   loader?.classList.toggle('hide', !show);
 }
 
-function mergeSettings(raw={}) {
+function mergeSettings(raw = {}) {
   return {
     ...DEFAULT_SCHOOL_SETTINGS,
     ...raw,
@@ -62,61 +64,6 @@ function mergeSettings(raw={}) {
 export function getCachedSchoolSettings() {
   try { return mergeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch { return mergeSettings(); }
-}
-
-function injectSharedSidebarStyles() {
-  if (document.getElementById('student-admin-sidebar-style')) return;
-  const style = document.createElement('style');
-  style.id = 'student-admin-sidebar-style';
-  style.textContent = `
-    .sidebar.student-shared-sidebar{
-      position:fixed;inset:0 auto 0 0;width:260px;background:#fff;color:#14213d;
-      border-right:1px solid var(--line,#e6eaf0);padding:20px 14px;display:flex;flex-direction:column;
-      z-index:200;box-shadow:0 8px 28px rgba(19,43,88,.06);transition:width .28s cubic-bezier(.2,.8,.2,1),transform .28s ease;
-      overflow:hidden;
-    }
-    .student-shared-sidebar .brand{display:flex;align-items:center;gap:10px;padding:5px 10px 22px;white-space:nowrap;border-bottom:0;height:auto}
-    .student-shared-sidebar .brand img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:none;flex:none}
-    .student-shared-sidebar .brand strong{display:block;color:#14213d;font-size:14px;line-height:1.2}
-    .student-shared-sidebar .brand small{display:block;color:#667085;font-size:11px;margin-top:2px}
-    .student-shared-sidebar .nav{display:grid;gap:4px;overflow:auto;margin-top:0}
-    .student-shared-sidebar .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:#526078;font-size:13px;font-weight:600;margin:0;white-space:nowrap;transition:.2s;transform:none}
-    .student-shared-sidebar .nav a:hover{background:#f0f5ff;color:var(--blue,#123d8f);transform:translateX(2px)}
-    .student-shared-sidebar .nav a.active{background:#eaf1ff;color:var(--blue,#123d8f);box-shadow:inset 3px 0 var(--blue,#123d8f)}
-    .student-shared-sidebar .ico{width:22px;height:22px;display:grid;place-items:center;flex:0 0 22px;font-size:17px}
-    .student-shared-sidebar .logout{margin-top:auto!important;background:#fff1f1!important;color:#c62828!important;border:0;cursor:pointer}
-    .student-sidebar-toggle{position:absolute;right:0;top:20px;width:32px;height:34px;border:0;border-radius:9px 0 0 9px;background:var(--yellow,#f4c400);color:#123d8f;font-size:19px;font-weight:900;cursor:pointer;z-index:205}
-    body.collapsed .student-shared-sidebar{width:82px;padding:16px 9px}
-    body.collapsed .student-shared-sidebar .brand{justify-content:center;padding:4px 0 20px}
-    body.collapsed .student-shared-sidebar .brand div{display:none}
-    body.collapsed .student-shared-sidebar .nav a{justify-content:center;padding:12px 8px}
-    body.collapsed .student-shared-sidebar .nav a span:not(.ico){display:none}
-    body.collapsed .student-shared-sidebar .logout span:not(.ico){display:none}
-    body.collapsed .student-shared-sidebar .student-sidebar-toggle{transform:rotate(180deg)}
-    body.collapsed .main{margin-left:82px;width:calc(100% - 82px)}
-    .student-mobile-menu{display:none}
-    .student-sidebar-scrim{display:none}
-    body.school-dark .student-shared-sidebar{background:#131d2d;color:#edf3ff;border-color:#26334b}
-    body.school-dark .student-shared-sidebar .brand strong{color:#edf3ff}
-    body.school-dark .student-shared-sidebar .brand small{color:#9eacc4}
-    body.school-dark .student-shared-sidebar .nav a{color:#b8c4d8}
-    body.school-dark .student-shared-sidebar .nav a:hover{background:#1a2940;color:#fff}
-    body.school-dark .student-shared-sidebar .nav a.active{background:#1b3153;color:#fff}
-    @media(max-width:760px){
-      .sidebar.student-shared-sidebar{width:260px;transform:translateX(-102%);box-shadow:14px 0 40px rgba(19,43,88,.16)}
-      body.student-sidebar-open .sidebar.student-shared-sidebar{transform:translateX(0)}
-      body.student-sidebar-open .student-sidebar-scrim{display:block;position:fixed;inset:0;background:rgba(3,28,53,.35);z-index:190}
-      body.collapsed .sidebar.student-shared-sidebar{width:260px;padding:20px 14px;transform:translateX(-102%)}
-      body.collapsed.student-sidebar-open .sidebar.student-shared-sidebar{transform:translateX(0)}
-      body.collapsed .student-shared-sidebar .brand div,.student-shared-sidebar .brand div{display:block}
-      body.collapsed .student-shared-sidebar .nav a{justify-content:flex-start;padding:11px 12px}
-      body.collapsed .student-shared-sidebar .nav a span:not(.ico),body.collapsed .student-shared-sidebar .logout span:not(.ico){display:inline}
-      body.collapsed .student-shared-sidebar .student-sidebar-toggle{transform:none}
-      .student-mobile-menu{display:grid;width:40px;height:40px;place-items:center;border:1px solid var(--border,#e6eaf0);border-radius:11px;background:#fff;color:#123d8f;cursor:pointer;flex:none}
-      .top{align-items:flex-start}
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 function applySettingsToDom(settings) {
@@ -157,57 +104,142 @@ function initialsFromStudent(student) {
 
 function setupLoader() {
   let loader = document.querySelector('#page-loader, #portalPageLoader');
-  if (loader) { window.__portalLoader = loader; return loader; }
+  if (loader) {
+    window.__portalLoader = loader;
+    return loader;
+  }
   if (document.body.classList.contains('login-page')) return null;
-  const settings = getCachedSchoolSettings();
   loader = document.createElement('div');
   loader.id = 'portalPageLoader';
   loader.className = 'portal-page-loader';
-  loader.innerHTML = `<div class="portal-loader-inner"><div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="${escapeHtml(settings.logo_url)}" alt="School logo"></div><div class="portal-loader-title">${escapeHtml(settings.school_name)}</div><p class="portal-loader-sub">Loading your student portal…</p><div class="portal-loader-bar"><i></i></div></div>`;
+  loader.innerHTML = `<div class="portal-loader-inner"><div class="portal-loader-mark"><span class="portal-loader-ring"></span><img src="${escapeHtml(getCachedSchoolSettings().logo_url)}" alt="School logo"></div><div class="portal-loader-title">${escapeHtml(getCachedSchoolSettings().school_name)}</div><p class="portal-loader-sub">Loading your student portal…</p><div class="portal-loader-bar"><i></i></div></div>`;
   document.body.prepend(loader);
   window.__portalLoader = loader;
   return loader;
 }
 
-export function finishPageLoad(delay=180) {
+export function finishPageLoad(delay = 180) {
   setTimeout(() => window.__portalLoader?.classList.add('hide'), delay);
 }
 
-function normalizeSidebar() {
-  injectSharedSidebarStyles();
-  const sidebar = document.querySelector('.sidebar');
-  if (!sidebar || sidebar.dataset.sharedStudentSidebar === '1') return;
-  sidebar.dataset.sharedStudentSidebar = '1';
-  sidebar.classList.add('student-shared-sidebar');
-  const current = location.pathname.split('/').pop() || 'index.html';
-  const active = STUDENT_NAV.findIndex(item => item[0] === current);
-  sidebar.innerHTML = `<button class="student-sidebar-toggle" id="toggle" aria-label="Collapse sidebar">‹</button><div class="brand"><img src="${escapeHtml(getCachedSchoolSettings().logo_url)}" alt="School logo"><div><strong>${escapeHtml(getCachedSchoolSettings().school_name)}</strong><small>Student Portal</small></div></div><nav class="nav" aria-label="Student portal navigation">${STUDENT_NAV.map((item,index)=>`<a class="${index===active?'active':''}" href="${item[0]}"><span class="ico">${item[2]}</span><span>${item[1]}</span></a>`).join('')}<a class="logout" href="#"><span class="ico">↪</span><span>Sign Out</span></a></nav>`;
-  let scrim = document.querySelector('.student-sidebar-scrim');
-  if (!scrim) { scrim = document.createElement('div'); scrim.className = 'student-sidebar-scrim'; document.body.appendChild(scrim); }
-  let mobileMenu = document.querySelector('.student-mobile-menu');
-  const top = document.querySelector('.top');
-  if (top && !top.querySelector('.student-mobile-menu')) {
-    mobileMenu = document.createElement('button');
-    mobileMenu.className = 'student-mobile-menu';
-    mobileMenu.type = 'button';
-    mobileMenu.setAttribute('aria-label','Open navigation');
-    mobileMenu.innerHTML = '☰';
-    top.prepend(mobileMenu);
-  }
-  const toggle = sidebar.querySelector('#toggle');
-  const closeMobile = () => document.body.classList.remove('student-sidebar-open');
-  toggle?.addEventListener('click', () => {
-    if (window.innerWidth <= 760) closeMobile();
-    else {
-      document.body.classList.toggle('collapsed');
-      localStorage.setItem(SIDEBAR_KEY, document.body.classList.contains('collapsed') ? '1' : '0');
+function getCurrentPage() {
+  const value = location.pathname.split('/').pop();
+  return value || 'index.html';
+}
+
+function renderSidebar(settings) {
+  const current = getCurrentPage();
+  const safeSettings = mergeSettings(settings);
+  const links = STUDENT_NAV.map(([href, label, icon]) => `
+    <a class="${href === current ? 'active' : ''}" href="${href}">
+      <span class="ico">${icon}</span>
+      <span>${escapeHtml(label)}</span>
+    </a>`).join('');
+
+  return `<aside class="sidebar" id="studentSidebar" aria-label="Student portal navigation">
+    <button class="toggle" id="studentSidebarToggle" aria-label="Collapse sidebar">‹</button>
+    <div class="brand">
+      <img src="${escapeHtml(safeSettings.logo_url)}" alt="${escapeHtml(safeSettings.school_name)} crest">
+      <div><strong>${escapeHtml(safeSettings.school_name)}</strong><small>Student Portal</small></div>
+    </div>
+    <nav class="nav">${links}
+      <a class="logout" id="studentSidebarLogout" href="#"><span class="ico">↪</span><span>Sign Out</span></a>
+    </nav>
+  </aside>`;
+}
+
+function injectSidebarRuntimeStyles() {
+  if (document.getElementById('student-sidebar-runtime-style')) return;
+  const style = document.createElement('style');
+  style.id = 'student-sidebar-runtime-style';
+  style.textContent = `
+    .student-sidebar-overlay{display:none}
+    body.nav-header #studentSidebar{position:sticky;top:0;width:100%;height:auto;min-height:76px;display:flex;flex-direction:row;align-items:center;gap:18px;padding:10px 20px;border-right:0;border-bottom:1px solid var(--border,#e3ebf5);box-shadow:0 8px 24px rgba(19,43,88,.06)}
+    body.nav-header #studentSidebar .brand{min-width:190px;padding:4px 8px}
+    body.nav-header #studentSidebar .nav{display:flex;align-items:center;gap:4px;overflow:auto;flex:1;margin-top:0}
+    body.nav-header #studentSidebar .nav a{white-space:nowrap;margin:0;padding:10px 11px}
+    body.nav-header #studentSidebar .logout{position:static;margin:0}
+    body.nav-header .main{margin-left:0;width:100%}
+    @media(max-width:760px){
+      body:not(.nav-header) #studentSidebar{width:270px;transform:translateX(-100%);box-shadow:16px 0 45px rgba(3,48,98,.22)}
+      body:not(.nav-header) #studentSidebar.open{transform:translateX(0)}
+      .student-sidebar-overlay{position:fixed;inset:0;background:rgba(3,28,53,.4);z-index:25;display:block;opacity:0;visibility:hidden;transition:.25s ease}
+      .student-sidebar-overlay.show{opacity:1;visibility:visible}
+      .student-sidebar-mobile-menu{display:grid!important;place-items:center;width:42px;height:42px;border:1px solid var(--border,#e3ebf5);background:#fff;color:var(--blue-dark,#063b78);border-radius:12px;cursor:pointer;box-shadow:0 7px 24px rgba(22,61,105,.08);flex:0 0 42px}
     }
+    @media(min-width:761px){.student-sidebar-mobile-menu{display:none!important}}
+  `;
+  document.head.appendChild(style);
+}
+
+function ensureMobileMenu() {
+  if (document.body.classList.contains('nav-header')) return;
+  if (document.querySelector('.student-sidebar-mobile-menu')) return;
+  const top = document.querySelector('.top');
+  if (!top) return;
+  const copy = top.firstElementChild;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'student-sidebar-mobile-menu';
+  button.setAttribute('aria-label', 'Open student navigation');
+  button.textContent = '☰';
+  button.addEventListener('click', () => toggleSidebar(true));
+  top.insertBefore(button, copy || top.firstChild);
+}
+
+function ensureSidebarRuntime() {
+  const host = document.querySelector('.app');
+  const existing = document.querySelector('#studentSidebar, .sidebar');
+  if (!host || !existing) return;
+  injectSidebarRuntimeStyles();
+  const settings = getCachedSchoolSettings();
+  const old = existing;
+  const fresh = document.createElement('div');
+  fresh.innerHTML = renderSidebar(settings);
+  const sidebar = fresh.firstElementChild;
+  old.replaceWith(sidebar);
+  const overlay = document.createElement('div');
+  overlay.className = 'student-sidebar-overlay';
+  overlay.id = 'studentSidebarOverlay';
+  overlay.addEventListener('click', () => toggleSidebar(false));
+  document.body.appendChild(overlay);
+  bindSidebarEvents();
+  ensureMobileMenu();
+}
+
+function bindSidebarEvents() {
+  document.getElementById('studentSidebarToggle')?.addEventListener('click', () => {
+    const desktop = window.matchMedia('(min-width: 761px)').matches;
+    if (desktop) toggleSidebar(); else toggleSidebar(false);
   });
-  mobileMenu?.addEventListener('click', () => document.body.classList.toggle('student-sidebar-open'));
-  scrim.addEventListener('click', closeMobile, { once:false });
-  sidebar.querySelectorAll('nav a').forEach(link => link.addEventListener('click', closeMobile));
-  sidebar.querySelector('.logout')?.addEventListener('click', event => { event.preventDefault(); signOut(); });
-  if (localStorage.getItem(SIDEBAR_KEY) === '1' && window.innerWidth > 760) document.body.classList.add('collapsed');
+  document.getElementById('studentSidebarLogout')?.addEventListener('click', event => {
+    event.preventDefault();
+    signOut();
+  });
+}
+
+function toggleSidebar(open) {
+  const sidebar = document.getElementById('studentSidebar');
+  const overlay = document.getElementById('studentSidebarOverlay');
+  const mobile = window.matchMedia('(max-width: 760px)').matches;
+  if (mobile) {
+    const shouldOpen = typeof open === 'boolean' ? open : !sidebar?.classList.contains('open');
+    sidebar?.classList.toggle('open', shouldOpen);
+    overlay?.classList.toggle('show', shouldOpen);
+    return;
+  }
+  document.body.classList.toggle('collapsed', typeof open === 'boolean' ? !open : !document.body.classList.contains('collapsed'));
+  localStorage.setItem(SIDEBAR_KEY, document.body.classList.contains('collapsed') ? '1' : '0');
+}
+
+async function refreshShellSettings() {
+  const settings = await loadSchoolSettings();
+  const sidebar = document.getElementById('studentSidebar');
+  if (!sidebar) return;
+  sidebar.outerHTML = renderSidebar(settings);
+  bindSidebarEvents();
+  ensureMobileMenu();
+  if (localStorage.getItem(SIDEBAR_KEY) === '1' && window.matchMedia('(min-width: 761px)').matches) document.body.classList.add('collapsed');
 }
 
 function ensureNotificationCenter() {
@@ -220,7 +252,7 @@ function ensureNotificationCenter() {
   center.querySelector('.notification-close').addEventListener('click', closeNotificationCenter);
 }
 
-function renderNotifications(items=[]) {
+function renderNotifications(items = []) {
   const list = document.getElementById('notificationList');
   if (!list) return;
   if (!items.length) { list.innerHTML = '<div class="notification-empty"><b>No new notifications</b><span>You are all caught up.</span></div>'; return; }
@@ -273,54 +305,49 @@ function ensureProfileMenu() {
 }
 
 async function signOut() {
-  try { await supabase.auth.signOut(); }
-  finally { location.href = 'student-login.html'; }
+  try { await supabase.auth.signOut(); } finally { location.href = 'student-login.html'; }
 }
 window.signOut = signOut;
 export { signOut };
 
-export function mountStudentShell({ title='Student Portal', subtitle='', content='' }={}) {
+export function mountStudentShell({ title = 'Student Portal', subtitle = '', content = '' } = {}) {
   const app = document.querySelector('#student-app, #app');
   if (!app) return;
   const settings = getCachedSchoolSettings();
-  app.innerHTML = `<div class="app"><aside class="sidebar" aria-label="Student portal navigation"></aside><main class="main"><header class="top"><div><div class="eyebrow">STUDENT PORTAL</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="shellAvatar">ST</div><div><b id="shellName">Student</b><div class="muted"><span id="shellStudentId">—</span> · <span id="shellClass">—</span></div></div></div></div></header>${content}</main></div><div class="toast"></div>`;
-  normalizeSidebar();
-  ensureNotificationCenter(); ensureProfileMenu();
+  app.innerHTML = `<div class="app"><main class="main"><header class="top"><div><div class="eyebrow">STUDENT PORTAL</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="shellAvatar">ST</div><div><b id="shellName">Student</b><div class="muted"><span id="shellStudentId">—</span> · <span id="shellClass">—</span></div></div></div></div></header>${content}</main></div>`;
+  const main = app.querySelector('.main');
+  const shell = document.createElement('div');
+  shell.innerHTML = renderSidebar(settings);
+  app.querySelector('.app')?.prepend(shell.firstElementChild);
+  injectSidebarRuntimeStyles();
+  bindSidebarEvents();
+  ensureMobileMenu();
+  ensureNotificationCenter();
+  ensureProfileMenu();
   document.getElementById('notificationBell')?.addEventListener('click', openNotificationCenter);
   loadSchoolSettings();
 }
 
-async function hydrateShellStudent() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { location.href = 'student-login.html'; return null; }
-  const { data: student, error } = await supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,status').eq('user_id', session.user.id).maybeSingle();
-  if (error || !student) return null;
-  const { data: enrollment } = await supabase.from('enrollments').select('status,classes(name),session_id').eq('student_id', student.id).eq('status','ACTIVE').order('created_at',{ascending:false}).limit(1).maybeSingle();
-  const name = [student.first_name, student.last_name].filter(Boolean).join(' ') || 'Student';
-  document.getElementById('shellName')?.replaceChildren(document.createTextNode(name));
-  document.getElementById('shellStudentId')?.replaceChildren(document.createTextNode(student.student_id || '—'));
-  document.getElementById('shellClass')?.replaceChildren(document.createTextNode(enrollment?.classes?.name || 'Class —'));
-  const avatar = document.getElementById('shellAvatar');
-  if (avatar) {
-    if (student.photo_url) avatar.innerHTML = `<img src="${escapeHtml(student.photo_url)}" alt="Student passport photograph">`;
-    else avatar.textContent = initialsFromStudent(student);
-  }
-  return student;
+function setupSidebarForExistingPage() {
+  if (document.body.classList.contains('login-page')) return;
+  ensureSidebarRuntime();
+  if (localStorage.getItem(SIDEBAR_KEY) === '1' && window.matchMedia('(min-width: 761px)').matches) document.body.classList.add('collapsed');
 }
 
 function boot() {
   if (document.body.classList.contains('login-page')) return;
   setupLoader();
-  normalizeSidebar();
+  setupSidebarForExistingPage();
   ensureNotificationCenter();
   ensureProfileMenu();
   document.getElementById('notificationBell')?.addEventListener('click', openNotificationCenter);
   document.querySelectorAll('[data-toast]').forEach(el => el.addEventListener('click', event => { event.preventDefault(); toast(el.dataset.toast, 'info'); }));
+  loadSchoolSettings();
   window.addEventListener('student-notifications-ready', event => {
     window.__studentNotifications = event.detail || [];
     if (!document.getElementById('notificationCenter')?.hidden) renderNotifications(window.__studentNotifications);
   });
-  loadSchoolSettings();
+  window.addEventListener('school-settings-updated', refreshShellSettings);
 }
 
 document.addEventListener('DOMContentLoaded', boot);
