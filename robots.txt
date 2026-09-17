@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://laff-british-school-student-portal-l8ty.onrender.com/sitemap.xml
