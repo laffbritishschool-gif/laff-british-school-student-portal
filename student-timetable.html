@@ -125,7 +125,6 @@ async function load(){
    <div class="tb-day ${new Date().toLocaleDateString('en-US',{weekday:'long'})===day?'tb-today':''}" style="animation-delay:${i*.06}s">
     <div class="tb-day-title">${escapeHtml(day)}<small>${items.length} period${items.length===1?'':'s'}</small></div>
     ${items.length?items.map(r=>{
-      const teacher=[r.teachers?.first_name,r.teachers?.middle_name,r.teachers?.last_name].filter(Boolean).join(' ');
       return `<div class="tb-period">
        <time>${escapeHtml((r.start_time||'').slice(0,5))} – ${escapeHtml((r.end_time||'').slice(0,5))}</time>
        <b>${escapeHtml(r.subjectName||'Subject')}</b>
