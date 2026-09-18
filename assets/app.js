@@ -23,7 +23,7 @@ const STUDENT_NAV = [
   ['student-profile.html', 'My Profile', '♙'],
   ['student-results.html', 'Results', '▥'],
   ['student-attendance.html', 'Attendance', '✓'],
-  ['student-timetable.html', 'Timetable', '□'],
+  ['student-timetable.html?v=3', 'Timetable', '□'],
   ['student-announcements.html', 'Announcements', '♢'],
   ['student-fees.html', 'Fees & Payments', '₦'],
   ['id-card.html', 'My ID Card', '▣']
