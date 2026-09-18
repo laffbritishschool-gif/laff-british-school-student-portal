@@ -89,7 +89,7 @@ async function load(){
   let rows=[];
   if(enrollment?.class_id&&sessionId&&term?.id){
    const q=await supabase.from('timetables')
-    .select('id,day_of_week,start_time,end_time,room,subject_id,teacher_id,published,term_id,session_id,subjects(name),teachers(first_name,middle_name,last_name)')
+    .select('id,day_of_week,start_time,end_time,room,subject_id,teacher_id,published,term_id,session_id,subjects(name)')
     .eq('class_id',enrollment.class_id)
     .eq('session_id',sessionId)
     .eq('term_id',term.id)
@@ -120,7 +120,7 @@ async function load(){
       return `<div class="tb-period">
        <time>${escapeHtml((r.start_time||'').slice(0,5))} – ${escapeHtml((r.end_time||'').slice(0,5))}</time>
        <b>${escapeHtml(r.subjects?.name||'Subject')}</b>
-       <span>${escapeHtml(r.room||'Classroom')}${teacher?' · '+escapeHtml(teacher):''}</span>
+       <span>${escapeHtml(r.room||'Classroom')}</span>
       </div>`;
     }).join(''):'<div class="tb-empty">No class published</div>'}
    </div>`).join('');
