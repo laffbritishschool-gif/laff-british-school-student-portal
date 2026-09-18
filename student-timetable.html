@@ -89,7 +89,7 @@ async function load(){
   let rows=[];
   if(enrollment?.class_id&&sessionId&&term?.id){
    const q=await supabase.from('timetables')
-    .select('id,day_of_week,start_time,end_time,room,subject_id,teacher_id,published,term_id,session_id,subjects(name)')
+    .select('id,day_of_week,start_time,end_time,room,subject_id,published,term_id,session_id')
     .eq('class_id',enrollment.class_id)
     .eq('session_id',sessionId)
     .eq('term_id',term.id)
@@ -98,6 +98,15 @@ async function load(){
     .order('start_time',{ascending:true});
    if(q.error)throw q.error;
    rows=q.data||[];
+   if(rows.length){
+    const subjectIds=[...new Set(rows.map(r=>r.subject_id).filter(Boolean))];
+    if(subjectIds.length){
+     const {data:subjects,error:subjectError}=await supabase.from('subjects').select('id,name').in('id',subjectIds);
+     if(subjectError)throw subjectError;
+     const subjectMap=Object.fromEntries((subjects||[]).map(s=>[s.id,s.name]));
+     rows=rows.map(r=>({...r,subjectName:subjectMap[r.subject_id]||'Subject'}));
+    }
+   }
   }
 
   const grouped={...fallback};
@@ -119,7 +128,7 @@ async function load(){
       const teacher=[r.teachers?.first_name,r.teachers?.middle_name,r.teachers?.last_name].filter(Boolean).join(' ');
       return `<div class="tb-period">
        <time>${escapeHtml((r.start_time||'').slice(0,5))} – ${escapeHtml((r.end_time||'').slice(0,5))}</time>
-       <b>${escapeHtml(r.subjects?.name||'Subject')}</b>
+       <b>${escapeHtml(r.subjectName||'Subject')}</b>
        <span>${escapeHtml(r.room||'Classroom')}</span>
       </div>`;
     }).join(''):'<div class="tb-empty">No class published</div>'}
