@@ -122,7 +122,7 @@ function renderSidebar(settings) {
   const current = getCurrentPage();
   const safeSettings = mergeSettings(settings);
   const links = STUDENT_NAV.map(([href, label, icon]) => `
-    <a class="${href === current ? 'active' : ''}" href="${href}">
+    <a class="${href.split('?')[0] === current ? 'active' : ''}" href="${href}">
       <span class="ico">${icon}</span>
       <span>${escapeHtml(label)}</span>
     </a>`).join('');
