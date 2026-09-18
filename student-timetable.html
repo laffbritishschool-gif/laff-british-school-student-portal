@@ -38,7 +38,97 @@ function setShellStudent(studentName,studentId,className,photo){
  if(!avatar)return;
  if(photo){avatar.innerHTML=`<img src="${escapeHtml(photo)}" alt="Student passport photograph" loading="eager" decoding="async">`;const img=avatar.querySelector('img');img.addEventListener('error',()=>{avatar.textContent=fallbackInitials},{once:true})}else avatar.textContent=fallbackInitials;
 }
-async function load(){try{const{data:{session}}=await supabase.auth.getSession();if(!session){location.href='student-login.html';return}const{data:student,error:studentErr}=await supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url').eq('user_id',session.user.id).maybeSingle();if(studentErr)throw studentErr;if(!student)throw Error('Student profile not found.');const{data:curSession}=await supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle();const{data:term}=await supabase.from('terms').select('id,name').eq('is_current',true).limit(1).maybeSingle();const{data:enrollment,error:enrollErr}=await supabase.from('enrollments').select('class_id,classes(name)').eq('student_id',student.id).eq('session_id',curSession?.id||'').eq('status','ACTIVE').order('created_at',{ascending:false}).limit(1).maybeSingle();if(enrollErr)throw enrollErr;const name=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||'Student',className=enrollment?.classes?.name||'Class not assigned',termName=term?.name?.replaceAll('_',' ')||'Current term',sessionName=curSession?.name||'Current session';$('tbStudentName').textContent=name;$('tbStudentId').textContent=student.student_id||'—';$('tbClass').textContent=className;$('tbSession').textContent=[sessionName,termName].filter(Boolean).join(' · ');$('tbSubtitle').textContent=`${className} · ${termName} · ${sessionName}`;const photo=await getStudentPhotoUrl(student.photo_url);setShellStudent(name,student.student_id,className,photo);if(photo)$('tbSchoolLogo').alt='Student photo loaded';let rows=[];if(enrollment?.class_id&&curSession?.id){const q=await supabase.from('timetables').select('id,day_of_week,start_time,end_time,subject_id,room,subjects(name)').eq('class_id',enrollment.class_id).eq('session_id',curSession.id).order('day_of_week').order('start_time');if(q.error)throw q.error;rows=q.data||[]}const grouped={...fallback};rows.forEach(r=>{const d=String(r.day_of_week||'').trim();if(grouped[d])grouped[d].push(r)});$('timetableGrid').innerHTML=Object.entries(grouped).map(([day,items],i)=>`<div class="tb-day ${new Date().toLocaleDateString('en-US',{weekday:'long'})===day?'tb-today':''}" style="animation-delay:${i*.06}s"><div class="tb-day-title">${escapeHtml(day)}<small>${items.length} period${items.length===1?'':'s'}</small></div>${items.length?items.map(r=>`<div class="tb-period"><time>${escapeHtml(r.start_time||'')} – ${escapeHtml(r.end_time||'')}</time><b>${escapeHtml(r.subjects?.name||'Subject')}</b><span>${escapeHtml(r.room||'Classroom')}</span></div>`).join(''):'<div class="tb-empty">No class published</div>'}</div>`).join('')}catch(e){console.error(e);$('timetableGrid').innerHTML=`<div class="tb-empty"><b>Timetable could not load</b><br>${escapeHtml(e.message)}</div>`}}
+async function load(){
+ try{
+  const {data:{session},error:authError}=await supabase.auth.getSession();
+  if(authError)throw authError;
+  if(!session){location.href='student-login.html';return}
+  const {data:student,error:studentErr}=await supabase.from('students')
+   .select('id,student_id,first_name,middle_name,last_name,photo_url')
+   .eq('user_id',session.user.id).maybeSingle();
+  if(studentErr)throw studentErr;
+  if(!student)throw Error('Student profile not found. Please contact the school office.');
+
+  const [{data:curSession,error:sessionErr},{data:term,error:termErr}]=await Promise.all([
+   supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle(),
+   supabase.from('terms').select('id,name,session_id').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle()
+  ]);
+  if(sessionErr)throw sessionErr;
+  if(termErr)throw termErr;
+
+  const sessionId=curSession?.id||term?.session_id||'';
+  const [{data:enrollment,error:enrollErr},{data:school,error:schoolErr}]=await Promise.all([
+   sessionId?supabase.from('enrollments').select('id,class_id,status,created_at,classes(name)')
+    .eq('student_id',student.id).eq('session_id',sessionId).eq('status','ACTIVE')
+    .order('created_at',{ascending:false}).limit(1).maybeSingle():Promise.resolve({data:null,error:null}),
+   supabase.from('school_settings').select('school_name,motto,logo_url').limit(1).maybeSingle()
+  ]);
+  if(enrollErr)throw enrollErr;
+  if(schoolErr)console.warn('School settings could not load:',schoolErr);
+
+  const name=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||'Student';
+  const className=enrollment?.classes?.name||'Class not assigned';
+  const termName=term?.name?.replaceAll('_',' ')||'Current term';
+  const sessionName=curSession?.name||'Current session';
+
+  $('tbStudentName').textContent=name;
+  $('tbStudentId').textContent=student.student_id||'—';
+  $('tbClass').textContent=className;
+  $('tbSession').textContent=[sessionName,termName].filter(Boolean).join(' · ');
+  $('tbSubtitle').textContent=enrollment?.class_id
+   ? `${className} · ${termName} · ${sessionName}`
+   : 'Your class assignment is required before a timetable can be shown.';
+
+  if(school?.school_name)$('tbSchoolName').textContent=school.school_name;
+  if(school?.motto)$('tbSchoolMotto').textContent=school.motto;
+  if(school?.logo_url)$('tbSchoolLogo').src=school.logo_url;
+
+  const photo=await getStudentPhotoUrl(student.photo_url);
+  setShellStudent(name,student.student_id,className,photo);
+
+  let rows=[];
+  if(enrollment?.class_id&&sessionId&&term?.id){
+   const q=await supabase.from('timetables')
+    .select('id,day_of_week,start_time,end_time,room,subject_id,teacher_id,published,term_id,session_id,subjects(name),teachers(first_name,middle_name,last_name)')
+    .eq('class_id',enrollment.class_id)
+    .eq('session_id',sessionId)
+    .eq('term_id',term.id)
+    .eq('published',true)
+    .order('day_of_week',{ascending:true})
+    .order('start_time',{ascending:true});
+   if(q.error)throw q.error;
+   rows=q.data||[];
+  }
+
+  const grouped={...fallback};
+  rows.forEach(r=>{
+   const dayMap={1:'Monday',2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday',6:'Saturday',7:'Sunday'};
+   const d=dayMap[Number(r.day_of_week)]||String(r.day_of_week||'').trim();
+   if(grouped[d])grouped[d].push(r);
+  });
+
+  if(!rows.length){
+   $('timetableGrid').innerHTML=`<div class="tb-empty"><b>No published timetable yet</b><br>${escapeHtml(enrollment?.class_id?'The school has not published a timetable for your current class, session and term.':'Your student account does not have an active class assignment for the current session.')}</div>`;
+   return;
+  }
+
+  $('timetableGrid').innerHTML=Object.entries(grouped).map(([day,items],i)=>`
+   <div class="tb-day ${new Date().toLocaleDateString('en-US',{weekday:'long'})===day?'tb-today':''}" style="animation-delay:${i*.06}s">
+    <div class="tb-day-title">${escapeHtml(day)}<small>${items.length} period${items.length===1?'':'s'}</small></div>
+    ${items.length?items.map(r=>{
+      const teacher=[r.teachers?.first_name,r.teachers?.middle_name,r.teachers?.last_name].filter(Boolean).join(' ');
+      return `<div class="tb-period">
+       <time>${escapeHtml((r.start_time||'').slice(0,5))} – ${escapeHtml((r.end_time||'').slice(0,5))}</time>
+       <b>${escapeHtml(r.subjects?.name||'Subject')}</b>
+       <span>${escapeHtml(r.room||'Classroom')}${teacher?' · '+escapeHtml(teacher):''}</span>
+      </div>`;
+    }).join(''):'<div class="tb-empty">No class published</div>'}
+   </div>`).join('');
+ }catch(e){
+  console.error('Student timetable load failed:',e);
+  $('timetableGrid').innerHTML=`<div class="tb-empty"><b>Timetable could not load</b><br>${escapeHtml(e?.message||'Please try again later.')}</div>`;
+ }
+}
 $('refreshTimetable')?.addEventListener('click',load);$('printTimetable')?.addEventListener('click',()=>window.print());load();
 </script>
 </body></html>
