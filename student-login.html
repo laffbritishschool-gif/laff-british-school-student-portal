@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="https://i.ibb.co/whtP8S5v/image.png">
+<link rel="icon" href="https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029">
 <meta name="theme-color" content="#0755a5">
 <title>Student Login | Laff British Montessori School</title>
 <link rel="stylesheet" href="assets/styles.css">
@@ -31,7 +31,7 @@ body{margin:0;background:#f4f7fb;color:var(--ink);font-family:Inter,system-ui,-a
 <main class="login-page">
 <section class="login-shell" aria-label="Student portal sign in">
 <div class="login-brand">
-<img class="crest" src="https://i.ibb.co/whtP8S5v/image.png" alt="Laff British Montessori School crest">
+<img class="crest" src="https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029" alt="Laff British Montessori School crest">
 <div class="brand-kicker">LAFF BRITISH MONTESSORI SCHOOL</div>
 <h1>Student Portal</h1>
 <p>Welcome to your secure school portal. Sign in to access your academic records, results, attendance, timetable, fees and student ID.</p>
@@ -104,7 +104,7 @@ boot();
 form.addEventListener('submit',async(event)=>{
   event.preventDefault();
   showMessage('');
-  const registrationNumber=registration.value.trim().toUpperCase();
+  const registrationNumber=registration.value.trim().replace(/\s+/g,'').toUpperCase();
   const passwordValue=password.value;
   if(!registrationNumber||!passwordValue){showMessage('Enter your registration number and password.');return;}
   button.disabled=true;
