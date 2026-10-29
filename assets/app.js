@@ -11,7 +11,7 @@ const SETTINGS_KEY = 'laff-school-settings';
 const DEFAULT_SCHOOL_SETTINGS = {
   school_name: 'Laff British Montessori School',
   motto: 'Learning · Character · Excellence',
-  logo_url: 'https://i.ibb.co/whtP8S5v/image.png',
+  logo_url: 'https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029',
   primary_color: '#123d8f',
   secondary_color: '#f4c400',
   ui_settings: { navigation: 'sidebar', theme: 'light', compact_sidebar: false, show_breadcrumbs: true }
@@ -53,9 +53,14 @@ export function pageLoading(show = true) {
 }
 
 function mergeSettings(raw = {}) {
+  const legacyLogo = 'https://i.ibb.co/whtP8S5v/image.png';
+  const selectedLogo = raw.logo_url && raw.logo_url !== legacyLogo
+    ? raw.logo_url
+    : DEFAULT_SCHOOL_SETTINGS.logo_url;
   return {
     ...DEFAULT_SCHOOL_SETTINGS,
     ...raw,
+    logo_url: selectedLogo,
     ui_settings: { ...DEFAULT_SCHOOL_SETTINGS.ui_settings, ...(raw.ui_settings || {}) }
   };
 }
