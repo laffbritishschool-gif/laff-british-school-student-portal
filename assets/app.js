@@ -336,8 +336,24 @@ function setupSidebarForExistingPage(){
   if(localStorage.getItem(SIDEBAR_KEY)==='1'&&window.matchMedia('(min-width:761px)').matches)document.body.classList.add('collapsed');
 }
 
-function boot(){
+async function enforceFirstLoginPasswordChange(){
+  const page=location.pathname.split('/').pop()||'index.html';
+  if(page==='student-login.html'||page==='student-change-password.html')return false;
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session)return false;
+  const {data:profile,error}=await supabase.from('profiles')
+    .select('role,is_active,must_change_password').eq('id',session.user.id).maybeSingle();
+  if(!error&&profile?.role==='STUDENT'&&profile.is_active===true&&profile.must_change_password===true){
+    location.replace('student-change-password.html');
+    return true;
+  }
+  return false;
+}
+
+async function boot(){
   if(document.body.classList.contains('login-page'))return;
+  try{if(await enforceFirstLoginPasswordChange())return;}
+  catch(error){console.warn('Could not check first-login password status.',error);}
   setupLoader(); setupSidebarForExistingPage(); ensureNotificationCenter(); ensureProfileMenu();
   document.getElementById('notificationBell')?.addEventListener('click',openNotificationCenter);
   document.querySelectorAll('[data-toast]').forEach(el=>el.addEventListener('click',event=>{event.preventDefault();toast(el.dataset.toast,'info')}));
