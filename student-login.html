@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <meta name="theme-color" content="#0755a5">
 <title>Student Login | Laff British Montessori School</title>
 <link rel="stylesheet" href="assets/styles.css">
@@ -123,7 +124,7 @@ form.addEventListener('submit',async(event)=>{
     if(profileError||!profile||profile.role!=='STUDENT'||profile.is_active===false){await sb.auth.signOut();throw new Error('This is not an active student account. Please contact the school administrator.');}
     showMessage('Sign in successful. Opening your student portal…','success');
     if(remember.checked){localStorage.setItem('laffStudentRemember','1');}else{localStorage.removeItem('laffStudentRemember');}
-    setTimeout(()=>location.replace(profile.must_change_password?'student-profile.html?change-password=1':'index.html'),250);
+    setTimeout(()=>location.replace(profile.must_change_password?'student-change-password.html':'index.html'),250);
   }catch(error){
     showMessage(error.message||'Unable to sign in. Please try again.');
     button.disabled=false;
