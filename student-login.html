@@ -98,7 +98,19 @@ showPassword.addEventListener('click',()=>{
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
-  if(session) location.replace('index.html');
+  if(!session)return;
+  try{
+    const {data:profile,error}=await sb.from('profiles')
+      .select('role,is_active,must_change_password')
+      .eq('id',session.user.id).maybeSingle();
+    if(!error&&profile?.role==='STUDENT'&&profile.is_active===true&&profile.must_change_password===true){
+      location.replace('student-change-password.html');
+    }else{
+      location.replace('index.html');
+    }
+  }catch{
+    location.replace('index.html');
+  }
 }
 boot();
 
