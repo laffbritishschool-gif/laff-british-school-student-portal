@@ -4,7 +4,7 @@ const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=v=>`₦${Number(v||0).toLocaleString('en-NG',{minimumFractionDigits:2})}`;
 const serviceNames={RESULT_ACCESS:'Result Access',ID_CARD:'Digital Student ID Card'};
 const serviceDesc={RESULT_ACCESS:'Unlock published academic results',ID_CARD:'Unlock digital student ID card'};
-async function session(){const {data:{session}}=await supabase.auth.getSession();if(!session){location.replace('student-login.html');return null}return session}
+async function session(){const {data:{session}}=await supabase.auth.getSession();if(!session){location.replace('/student-login');return null}return session}
 async function call(action,body,s){const res=await fetch(EDGE,{method:'POST',headers:{Authorization:`Bearer ${s.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action,...body})});const p=await res.json();if(!res.ok)throw new Error(p.error||'Payment request failed.');return p}
 async function payFee(feeId){const s=await session();if(!s)return;const p=await call('initialize_fee',{fee_id:feeId,callback_url:`${location.origin}${location.pathname}`},s);if(p.paid){location.reload();return}if(p.authorization_url)location.href=p.authorization_url}
 async function verifyReturn(){const ref=new URLSearchParams(location.search).get('reference');if(!ref)return null;const s=await session();if(!s)return null;const p=await call('verify_fee',{reference:ref},s);history.replaceState({},document.title,location.pathname);return p}

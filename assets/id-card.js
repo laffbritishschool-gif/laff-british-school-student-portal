@@ -3,7 +3,7 @@ import { servicePaid, verifyPaymentFromUrl, startServicePayment, paymentGateMark
 const SERVICE='ID_CARD';
 const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const GENERATION_KEY='lbs-id-card-generated-session';
-function addPaymentCss(){if(document.querySelector('link[data-service-payment]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='assets/service-payment.css?v=9';l.dataset.servicePayment='1';document.head.appendChild(l)}
+function addPaymentCss(){if(document.querySelector('link[data-service-payment]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='/assets/service-payment.css?v=9';l.dataset.servicePayment='1';document.head.appendChild(l)}
 function setText(selector,value){const e=document.querySelector(selector);if(e)e.textContent=value||'—'}
 function setPhoto(el,url,initials){if(!el)return;if(url){el.innerHTML=`<img src="${esc(url)}" alt="Student passport photograph" loading="eager">`;el.querySelector('img')?.addEventListener('error',()=>el.textContent=initials,{once:true})}else el.textContent=initials}
 async function photoUrl(value){if(!value)return null;const raw=String(value);if(/^https?:\/\//i.test(raw))return raw;try{const {data}=await supabase.storage.from('student-passports').createSignedUrl(raw,21600);return data?.signedUrl||null}catch{return null}}
@@ -37,7 +37,7 @@ async function gate({forceGenerate=false}={}){
 async function loadCard({skipGate=false,generated=false}={}){
  const section=document.querySelector('.card-section'),gateHost=document.getElementById('idAccessGate');
  try{
-  const {data:{session}}=await supabase.auth.getSession();if(!session){location.replace('student-login.html');return}
+  const {data:{session}}=await supabase.auth.getSession();if(!session){location.replace('/student-login');return}
   if(!skipGate && !(await gate()))return;
   ensurePremiumStyles();
   const {data:student,error:studentError}=await supabase.from('students').select('id,student_id,first_name,middle_name,last_name,school_email,photo_url,status').eq('user_id',session.user.id).maybeSingle();if(studentError)throw studentError;if(!student)throw new Error('Student profile not found.');
