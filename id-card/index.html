@@ -71,31 +71,62 @@ function markGenerated(){try{sessionStorage.setItem(GEN_KEY,'1')}catch{}}
 async function requirePayment(){const gate=$('idAccessGate');try{const verified=await verifyPaymentFromUrl(SERVICE);if(verified?.paid){await animateGeneration(gate,'Your payment has just been verified. We are now creating your premium Laff British card.');markGenerated();return true}}catch(e){gate.innerHTML=`<div class="card"><strong>Payment verification needs attention</strong><p class="muted">${esc(e.message||'Please try again.')}</p></div>`;return false}let paid=false;try{paid=await servicePaid(SERVICE)}catch(e){console.warn('ID card paid-status check failed',e)}if(paid){if(shouldGenerateFirstVisit()){await animateGeneration(gate);markGenerated()}return true}const{data:setting,error}=await supabase.from('student_service_settings').select('title,amount,is_active').eq('service_code',SERVICE).maybeSingle();if(error)throw error;if(!setting?.is_active){gate.innerHTML='<div class="card"><strong>ID card access is currently unavailable</strong><p class="muted">Please contact the school office for assistance.</p></div>';return false}gate.innerHTML=paymentGateMarkup({title:'Unlock Your Premium Student ID',description:'Pay the ID card fee to generate your official Laff British digital identity card.',amount:setting.amount,serviceCode:SERVICE});$('servicePayButton')?.addEventListener('click',e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Opening secure checkout…';startServicePayment(SERVICE,{onLoad:()=>{b.textContent='Paystack checkout open'},onSuccess:async()=>{try{await animateGeneration(gate,'Payment confirmed successfully. We are now generating your premium Laff British student card.');markGenerated();await load({skipGate:true,generated:true})}catch(err){console.error(err);b.disabled=false;b.textContent='Pay with Paystack';gate.insertAdjacentHTML('beforeend',`<div style="background:#fdeaea;color:#9b2c2c;margin-top:14px;padding:12px;border-radius:10px">${esc(err.message||'Card generation failed.')}</div>`)}} ,onCancel:()=>{b.disabled=false;b.textContent='Pay with Paystack'},onError:error=>{b.disabled=false;b.textContent='Pay with Paystack';gate.insertAdjacentHTML('beforeend',`<div style="background:#fdeaea;color:#9b2c2c;margin-top:14px;padding:12px;border-radius:10px">${esc(error.message||'Payment verification failed.')}</div>`)}})});return false}
 function makeBarcode(value){const text=String(value||'LBS');let bars='';for(let r=0;r<2;r++){for(let i=0;i<text.length;i++){const n=text.charCodeAt(i)+i*17+r*9;bars+=((n%7)+2)+' ';bars+=((n%5)+1)+' ';bars+=((n%3)+1)+' ';} }const widths=bars.trim().split(/\s+/).map(Number);const pieces=[];let black=true;for(const w of widths){pieces.push(`${black?'#082f63':'transparent'} 0 ${w}px`);black=!black}return pieces}
 function applyBarcode(value){const el=$('idBarcode');if(!el)return;const units=[];const raw=String(value||'LBS').replace(/\s+/g,'');for(let r=0;r<2;r++){for(let i=0;i<raw.length;i++){const n=raw.charCodeAt(i)+i*17+r*9;units.push((n%4)+1);units.push((n%3)+1);units.push((n%5)+1)}}let total=units.reduce((a,b)=>a+b,0),cursor=0,segments=[];let black=true;for(const unit of units){const pct=(unit/total)*100;segments.push(`${black?'#082f63':'transparent'} ${cursor}% ${cursor+pct}%`);cursor+=pct;black=!black}el.style.background=`linear-gradient(90deg,${segments.join(',')})`}
-async function load({skipGate=false,generated=false}={}){try{const{data:{session}}=await supabase.auth.getSession();if(!session){location.href='/student-login';return}if(!skipGate&&!(await requirePayment()))return;
-const{data:student,error:studentErr}=await supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,status').eq('user_id',session.user.id).maybeSingle();
-if(studentErr||!student)throw new Error('Your student profile could not be found. Please contact the school office.');
-const[{data:sess},{data:school},{data:card}]=await Promise.all([supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle(),supabase.from('school_settings').select('school_name,motto,logo_url,address').limit(1).maybeSingle(),supabase.from('id_cards').select('card_number,issued_at,expires_at,is_active').eq('student_id',student.id).eq('is_active',true).order('issued_at',{ascending:false}).limit(1).maybeSingle()]);
-const{data:enrollment}=await supabase.from('enrollments').select('class_id,classes(name)').eq('student_id',student.id).eq('session_id',sess?.id||'').eq('status','ACTIVE').order('created_at',{ascending:false}).limit(1).maybeSingle();
-const name=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||'Student';
-const className=enrollment?.classes?.name||'Class not assigned';
-const email=student.school_email||session.user.email||'—';
-const sessionName=sess?.name||'Current session';
-const id=student.student_id||'—';
-const fallback=initials(name);
-const serial=`RC-${String(id).replace(/[^A-Za-z0-9]/g,'').slice(-10)||'LBS000001'}`;
-const pin=String(Math.abs([...id].reduce((n,c)=>n*31+c.charCodeAt(0),7))%900000+100000);
-const cardNumber=card?.card_number||id;
-const schoolName=school?.school_name||'Laff British Montessori School';
-const schoolAddress=school?.address||'Molipa';
-const status=String(student.status||'ACTIVE').toUpperCase();
-set('idStudentName',name);set('idStudentContext',`${id} · ${className} · ${sessionName}`);set('shellName',name);set('shellStudentId',id);set('shellClass',className);
-set('frontSchoolName',schoolName.toUpperCase());set('frontSchoolAddress',schoolAddress.toUpperCase());set('backSchoolName',schoolName.toUpperCase());set('backSchoolAddress',`${schoolAddress.toUpperCase()} · OFFICIAL STUDENT IDENTIFICATION`);
-set('cardStudentName',name);set('cardStudentId',id);set('cardClass',className);set('cardEmail',email);set('cardSession',sessionName);set('cardStatusText',`${status} STUDENT`);set('cardStatus',`${status} STUDENT`);set('cardNumberText',cardNumber);set('cardNumber',cardNumber);set('backStudentId',id);set('backCardNumber',cardNumber);set('serialNumber',serial);set('resultPin',pin);set('barcodeLabel',`${id} · ${serial}`);set('accessEmail',email);set('accessSerial',serial);set('accessPin',pin);set('accessStudentId',id);set('frontIssuedExpiry',`Issued ${formatDate(card?.issued_at)} · Expires ${formatDate(card?.expires_at)}`);
-applyBarcode(`${id}|${serial}|${cardNumber}`);
-const logo=school?.logo_url||'https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029';['frontLogo','backLogo'].forEach(x=>{if($(x))$(x).src=logo});
-const photo=await getPhoto(student.photo_url),photoEl=$('studentPhoto'),shell=$('shellAvatar');if(photoEl){photoEl.innerHTML='';if(photo){const img=document.createElement('img');img.src=photo;img.alt='Student passport photograph';img.loading='eager';img.decoding='async';img.onerror=()=>{photoEl.textContent=fallback};photoEl.appendChild(img)}else photoEl.textContent=fallback}if(shell){shell.innerHTML='';if(photo){const img=document.createElement('img');img.src=photo;img.alt='Student passport photograph';img.loading='eager';img.decoding='async';img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit';img.onerror=()=>{shell.textContent=fallback};shell.appendChild(img)}else shell.textContent=fallback}
-const content=$('idContent');if(content){content.hidden=false;if(generated){content.classList.add('id-content-reveal');const stack=$('cardStack');if(stack){stack.classList.add('generated-reveal');setTimeout(()=>stack.classList.remove('generated-reveal'),2100)}const gate=$('idAccessGate');if(gate){gate.hidden=true;gate.innerHTML=''}}}
-}catch(e){console.error(e);const gate=$('idAccessGate');if(gate)gate.innerHTML=`<div class="card"><strong>Student ID could not load</strong><p class="muted">${esc(e.message||'Please try again later.')}</p></div>`}}
+async function load({skipGate=false,generated=false}={}){
+  try{
+    const{data:{session}}=await supabase.auth.getSession();
+    if(!session){location.href='/student-login';return}
+    const{data:student,error:studentErr}=await supabase.from('students')
+      .select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,status')
+      .eq('user_id',session.user.id).maybeSingle();
+    if(studentErr||!student)throw new Error('Your student profile could not be found. Please contact the school office.');
+    const{data:card,error:cardErr}=await supabase.from('id_cards')
+      .select('card_number,issued_at,expires_at,is_active')
+      .eq('student_id',student.id).eq('is_active',true)
+      .order('issued_at',{ascending:false}).limit(1).maybeSingle();
+    if(cardErr)throw cardErr;
+    const hasIssuedCard=Boolean(card&&card.is_active!==false);
+    if(!hasIssuedCard&&!skipGate&&!(await requirePayment()))return;
+    const[{data:sess},{data:school}]=await Promise.all([
+      supabase.from('academic_sessions').select('id,name').eq('is_current',true).order('starts_on',{ascending:false}).limit(1).maybeSingle(),
+      supabase.from('school_settings').select('school_name,motto,logo_url,address').limit(1).maybeSingle()
+    ]);
+    const{data:enrollment}=await supabase.from('enrollments').select('class_id,classes(name)')
+      .eq('student_id',student.id).eq('session_id',sess?.id||'').eq('status','ACTIVE')
+      .order('created_at',{ascending:false}).limit(1).maybeSingle();
+    const name=[student.first_name,student.middle_name,student.last_name].filter(Boolean).join(' ')||'Student';
+    const className=enrollment?.classes?.name||'Class not assigned';
+    const email=student.school_email||session.user.email||'—';
+    const sessionName=sess?.name||'Current session';
+    const id=student.student_id||'—';
+    const fallback=initials(name);
+    const serial=`RC-${String(id).replace(/[^A-Za-z0-9]/g,'').slice(-10)||'LBS000001'}`;
+    const pin=String(Math.abs([...id].reduce((n,c)=>n*31+c.charCodeAt(0),7))%900000+100000);
+    const cardNumber=hasIssuedCard?(card.card_number||'—'):'PENDING ISSUE';
+    const schoolName=school?.school_name||'Laff British Montessori School';
+    const schoolAddress=school?.address||'Molipa';
+    const status=String(student.status||'ACTIVE').toUpperCase();
+    set('idStudentName',name);set('idStudentContext',`${id} · ${className} · ${sessionName}`);set('shellName',name);set('shellStudentId',id);set('shellClass',className);
+    set('frontSchoolName',schoolName.toUpperCase());set('frontSchoolAddress',schoolAddress.toUpperCase());set('backSchoolName',schoolName.toUpperCase());set('backSchoolAddress',`${schoolAddress.toUpperCase()} · OFFICIAL STUDENT IDENTIFICATION`);
+    set('cardStudentName',name);set('cardStudentId',id);set('cardClass',className);set('cardEmail',email);set('cardSession',sessionName);
+    set('cardStatusText',hasIssuedCard?'CARD ISSUED':'AWAITING SCHOOL ISSUE');set('cardStatus',hasIssuedCard?'CARD ISSUED':'AWAITING ISSUE');
+    set('cardNumberText',cardNumber);set('cardNumber',cardNumber);set('backStudentId',id);set('backCardNumber',cardNumber);
+    set('serialNumber',serial);set('resultPin',pin);set('barcodeLabel',hasIssuedCard?`${id} · ${serial}`:'Awaiting card issue');
+    set('accessEmail',email);set('accessSerial',serial);set('accessPin',pin);set('accessStudentId',id);
+    set('frontIssuedExpiry',hasIssuedCard?`Issued ${formatDate(card.issued_at)} · Expires ${formatDate(card.expires_at)}`:'Awaiting school issue');
+    applyBarcode(hasIssuedCard?`${id}|${serial}|${cardNumber}`:id);
+    const logo=school?.logo_url||'https://raw.githubusercontent.com/laffbritishschool-gif/Laffbritishmontesorrischool.com/main/assets/school-logo.svg?v=20261029';
+    ['frontLogo','backLogo'].forEach(x=>{if($(x))$(x).src=logo});
+    const photo=await getPhoto(student.photo_url),photoEl=$('studentPhoto'),shell=$('shellAvatar');
+    if(photoEl){photoEl.innerHTML='';if(photo){const img=document.createElement('img');img.src=photo;img.alt='Student passport photograph';img.loading='eager';img.decoding='async';img.onerror=()=>{photoEl.textContent=fallback};photoEl.appendChild(img)}else photoEl.textContent=fallback}
+    if(shell){shell.innerHTML='';if(photo){const img=document.createElement('img');img.src=photo;img.alt='Student passport photograph';img.loading='eager';img.decoding='async';img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit';img.onerror=()=>{shell.textContent=fallback};shell.appendChild(img)}else shell.textContent=fallback}
+    const content=$('idContent');
+    if(content){content.hidden=false;if(generated){content.classList.add('id-content-reveal');const stack=$('cardStack');if(stack){stack.classList.add('generated-reveal');setTimeout(()=>stack.classList.remove('generated-reveal'),2100)}const gate=$('idAccessGate');if(gate){gate.hidden=true;gate.innerHTML=''}}}
+  }catch(e){
+    console.error(e);
+    const gate=$('idAccessGate');
+    if(gate)gate.innerHTML=`<div class="card"><strong>Student ID could not load</strong><p class="muted">${esc(e.message||'Please try again later.')}</p></div>`;
+  }
+}
 $('printIdCard')?.addEventListener('click',()=>window.print());
 load();
 </script>
