@@ -19,14 +19,14 @@ const DEFAULT_SCHOOL_SETTINGS = {
 
 // SINGLE SOURCE OF TRUTH FOR THE ENTIRE STUDENT PORTAL SIDEBAR.
 const STUDENT_NAV = [
-  ['index.html', 'Dashboard', '⌂'],
-  ['student-profile.html', 'My Profile', '♙'],
-  ['student-results.html', 'Results', '▥'],
-  ['student-attendance.html', 'Attendance', '✓'],
-  ['student-timetable.html?v=3', 'Timetable', '□'],
-  ['student-announcements.html', 'Announcements', '♢'],
-  ['student-fees.html', 'Fees & Payments', '₦'],
-  ['id-card.html', 'My ID Card', '▣']
+  ['/', 'Dashboard', '⌂'],
+  ['/student-profile', 'My Profile', '♙'],
+  ['/student-results', 'Results', '▥'],
+  ['/student-attendance', 'Attendance', '✓'],
+  ['/student-timetable?v=3', 'Timetable', '□'],
+  ['/student-announcements', 'Announcements', '♢'],
+  ['/student-fees', 'Fees & Payments', '₦'],
+  ['/id-card', 'My ID Card', '▣']
 ];
 
 export function escapeHtml(value = '') {
@@ -120,7 +120,7 @@ export function finishPageLoad(delay = 180) { setTimeout(() => window.__portalLo
 
 function getCurrentPage() {
   const value = location.pathname.split('/').filter(Boolean).pop();
-  return value === 'dashboard' ? 'index.html' : (value || 'index.html');
+  return value === 'dashboard' ? '/' : (value || '/');
 }
 
 function renderSidebar(settings) {
@@ -257,7 +257,7 @@ function ensureNotificationCenter() {
   if (document.getElementById('notificationCenter')) return;
   const center = document.createElement('div');
   center.id = 'notificationCenter'; center.className = 'portal-overlay'; center.hidden = true;
-  center.innerHTML = `<div class="notification-center" role="dialog" aria-modal="true" aria-labelledby="notificationTitle"><div class="notification-head"><div><span class="eyebrow">STUDENT UPDATES</span><h2 id="notificationTitle">Notification Center</h2><p>Important school announcements and recent updates.</p></div><button class="notification-close" type="button" aria-label="Close notifications">×</button></div><div id="notificationList" class="notification-list"><div class="notification-loading"><span></span>Loading notifications…</div></div><div class="notification-foot"><a href="student-announcements.html">Open all announcements →</a></div></div>`;
+  center.innerHTML = `<div class="notification-center" role="dialog" aria-modal="true" aria-labelledby="notificationTitle"><div class="notification-head"><div><span class="eyebrow">STUDENT UPDATES</span><h2 id="notificationTitle">Notification Center</h2><p>Important school announcements and recent updates.</p></div><button class="notification-close" type="button" aria-label="Close notifications">×</button></div><div id="notificationList" class="notification-list"><div class="notification-loading"><span></span>Loading notifications…</div></div><div class="notification-foot"><a href="/student-announcements">Open all announcements →</a></div></div>`;
   document.body.appendChild(center);
   center.addEventListener('click', event => { if (event.target === center) closeNotificationCenter(); });
   center.querySelector('.notification-close').addEventListener('click', closeNotificationCenter);
@@ -305,7 +305,7 @@ function ensureProfileMenu() {
   chip.setAttribute('role', 'button'); chip.setAttribute('tabindex', '0'); chip.setAttribute('aria-haspopup','menu'); chip.setAttribute('aria-expanded','false');
   chip.classList.add('profile-chip-clickable');
   const menu = document.createElement('div'); menu.id='profileMenu'; menu.className='profile-menu';
-  menu.innerHTML = `<a href="student-profile.html"><span>♙</span><div><b>My Profile</b><small>View your student information</small></div></a><button type="button" class="profile-logout"><span>↪</span><div><b>Logout</b><small>Sign out of this account</small></div></button>`;
+  menu.innerHTML = `<a href="/student-profile"><span>♙</span><div><b>My Profile</b><small>View your student information</small></div></a><button type="button" class="profile-logout"><span>↪</span><div><b>Logout</b><small>Sign out of this account</small></div></button>`;
   chip.parentElement.style.position='relative'; chip.parentElement.appendChild(menu);
   const toggle=()=>{const open=menu.classList.toggle('show');chip.setAttribute('aria-expanded',open?'true':'false')};
   chip.addEventListener('click',toggle);
@@ -315,7 +315,7 @@ function ensureProfileMenu() {
 }
 
 async function signOut() {
-  try { await supabase.auth.signOut(); } finally { location.href='student-login.html'; }
+  try { await supabase.auth.signOut(); } finally { location.href='/student-login'; }
 }
 window.signOut=signOut;
 export { signOut };
@@ -337,14 +337,14 @@ function setupSidebarForExistingPage(){
 }
 
 async function enforceFirstLoginPasswordChange(){
-  const page=location.pathname.split('/').pop()||'index.html';
-  if(page==='student-login.html'||page==='student-change-password.html')return false;
+  const page=location.pathname.split('/').pop()||'/';
+  if(page==='/student-login'||page==='/student-change-password')return false;
   const {data:{session}}=await supabase.auth.getSession();
   if(!session)return false;
   const {data:profile,error}=await supabase.from('profiles')
     .select('role,must_change_password').eq('id',session.user.id).maybeSingle();
   if(!error&&profile?.role==='STUDENT'&&profile.must_change_password===true){
-    location.replace('student-change-password.html');
+    location.replace('/student-change-password');
     return true;
   }
   return false;

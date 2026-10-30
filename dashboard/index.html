@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script defer src="/assets/clean-urls.js"></script>
 <base href="/">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -19,12 +20,12 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <title>LAFF Student Portal | Laff British Montessori School</title>
-<link rel="stylesheet" href="assets/styles.css">
-<link rel="stylesheet" href="assets/dashboard-home.css">
-<link rel="stylesheet" href="assets/portal-polish.css?v=6">
-<link rel="stylesheet" href="assets/profile-menu-fix.css?v=1">
+<link rel="stylesheet" href="/assets/styles.css">
+<link rel="stylesheet" href="/assets/dashboard-home.css">
+<link rel="stylesheet" href="/assets/portal-polish.css?v=6">
+<link rel="stylesheet" href="/assets/profile-menu-fix.css?v=1">
 <style>
-/* index.html owns ZERO sidebar markup. assets/app.js is the single sidebar controller. */
+/* / owns ZERO sidebar markup. assets/app.js is the single sidebar controller. */
 #page-loader{position:fixed;inset:0;background:#fff;display:grid;place-items:center;z-index:99999;transition:opacity .45s ease,visibility .45s ease}
 #page-loader.hide{opacity:0;visibility:hidden;pointer-events:none}
 .loader-box{width:230px;padding:25px 24px;text-align:center;background:#fff;color:#063b78;font-size:12px;font-weight:900}
@@ -49,7 +50,7 @@
 <div id="student-app"></div>
 
 <script type="module">
-import { mountStudentShell } from './assets/app.js';
+import { mountStudentShell } from '/assets/app.js';
 
 mountStudentShell({
   title: 'Dashboard',
@@ -94,19 +95,19 @@ mountStudentShell({
       </section>
 
       <section class="content dash-columns">
-        <div class="card dash-card"><div class="section-head dash-head"><h2>Academic snapshot</h2><a href="student-results.html">View full results →</a></div><div id="resultList"><div class="empty">Loading results…</div></div></div>
-        <div class="card dash-card"><div class="section-head dash-head"><h2>Latest announcements</h2><a href="student-announcements.html">See all →</a></div><div id="noticeList"><div class="empty">Loading announcements…</div></div></div>
+        <div class="card dash-card"><div class="section-head dash-head"><h2>Academic snapshot</h2><a href="/student-results">View full results →</a></div><div id="resultList"><div class="empty">Loading results…</div></div></div>
+        <div class="card dash-card"><div class="section-head dash-head"><h2>Latest announcements</h2><a href="/student-announcements">See all →</a></div><div id="noticeList"><div class="empty">Loading announcements…</div></div></div>
       </section>
 
       <section class="content lower-grid">
-        <div class="card dash-card"><div class="section-head dash-head"><h2>Attendance summary</h2><a href="student-attendance.html">Open attendance →</a></div><div class="attendance-box" id="attendanceBreakdown"><div><b>—</b><span>Present</span></div><div><b>—</b><span>Absent</span></div><div><b>—</b><span>Late</span></div></div></div>
-        <div class="card dash-card"><div class="section-head dash-head"><h2>Quick access</h2><span class="muted">Student services</span></div><div class="quick-grid"><a href="student-results.html"><span>▥</span><b>Results</b><small>Academic record</small></a><a href="student-timetable.html"><span>□</span><b>Timetable</b><small>Class schedule</small></a><a href="student-fees.html"><span>₦</span><b>Fees</b><small>Account status</small></a><a href="student-profile.html"><span>♙</span><b>Profile</b><small>Personal details</small></a><a href="student-announcements.html"><span>♢</span><b>Notices</b><small>School updates</small></a><a href="id-card.html"><span>▣</span><b>ID Card</b><small>Digital card</small></a></div></div>
+        <div class="card dash-card"><div class="section-head dash-head"><h2>Attendance summary</h2><a href="/student-attendance">Open attendance →</a></div><div class="attendance-box" id="attendanceBreakdown"><div><b>—</b><span>Present</span></div><div><b>—</b><span>Absent</span></div><div><b>—</b><span>Late</span></div></div></div>
+        <div class="card dash-card"><div class="section-head dash-head"><h2>Quick access</h2><span class="muted">Student services</span></div><div class="quick-grid"><a href="/student-results"><span>▥</span><b>Results</b><small>Academic record</small></a><a href="/student-timetable"><span>□</span><b>Timetable</b><small>Class schedule</small></a><a href="/student-fees"><span>₦</span><b>Fees</b><small>Account status</small></a><a href="/student-profile"><span>♙</span><b>Profile</b><small>Personal details</small></a><a href="/student-announcements"><span>♢</span><b>Notices</b><small>School updates</small></a><a href="/id-card"><span>▣</span><b>ID Card</b><small>Digital card</small></a></div></div>
       </section>
     </div>
     <footer class="footer">© 2026 Laff British Montessori School · Student Portal</footer>
   `
 });
 </script>
-<script type="module" src="./assets/dashboard.js"></script>
+<script type="module" src="/assets/dashboard.js"></script>
 </body>
 </html>

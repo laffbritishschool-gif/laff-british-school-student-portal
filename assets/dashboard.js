@@ -87,7 +87,7 @@ async function loadDashboard() {
     if (authError) throw authError;
     const session = authData?.session;
     if (!session) {
-      location.href = 'student-login.html';
+      location.href = '/student-login';
       return;
     }
 
