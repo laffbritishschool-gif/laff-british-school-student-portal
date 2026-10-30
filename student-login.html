@@ -136,7 +136,7 @@ form.addEventListener('submit',async(event)=>{
     if(profileError||!profile||profile.role!=='STUDENT'){await sb.auth.signOut();throw new Error('This login is not linked to a student account. Please contact the school administrator.');}
     showMessage('Sign in successful. Opening your student portal…','success');
     if(remember.checked){localStorage.setItem('laffStudentRemember','1');}else{localStorage.removeItem('laffStudentRemember');}
-    setTimeout(()=>location.replace(profile.must_change_password?'student-change-password.html':'index.html'),250);
+    setTimeout(()=>location.replace(profile.must_change_password?'student-change-password.html':'/dashboard'),250);
   }catch(error){
     showMessage(error.message||'Unable to sign in. Please try again.');
     button.disabled=false;
