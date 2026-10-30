@@ -1,0 +1,7 @@
+project_id = "moqpmrhholbbhuedvbgg"
+
+[functions.student-login]
+verify_jwt = false
+
+[functions.student-change-password]
+verify_jwt = true

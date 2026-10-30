@@ -119,8 +119,8 @@ function setupLoader() {
 export function finishPageLoad(delay = 180) { setTimeout(() => window.__portalLoader?.classList.add('hide'), delay); }
 
 function getCurrentPage() {
-  const value = location.pathname.split('/').pop();
-  return value || 'index.html';
+  const value = location.pathname.split('/').filter(Boolean).pop();
+  return value === 'dashboard' ? 'index.html' : (value || 'index.html');
 }
 
 function renderSidebar(settings) {
@@ -342,8 +342,8 @@ async function enforceFirstLoginPasswordChange(){
   const {data:{session}}=await supabase.auth.getSession();
   if(!session)return false;
   const {data:profile,error}=await supabase.from('profiles')
-    .select('role,is_active,must_change_password').eq('id',session.user.id).maybeSingle();
-  if(!error&&profile?.role==='STUDENT'&&profile.is_active===true&&profile.must_change_password===true){
+    .select('role,must_change_password').eq('id',session.user.id).maybeSingle();
+  if(!error&&profile?.role==='STUDENT'&&profile.must_change_password===true){
     location.replace('student-change-password.html');
     return true;
   }
