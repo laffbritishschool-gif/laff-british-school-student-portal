@@ -46,11 +46,11 @@ body{margin:0;background:#f4f7fb;color:var(--ink);font-family:Inter,system-ui,-a
 <div class="login-form">
 <div class="school-mark">STUDENT LOGIN</div>
 <h2>Sign in to continue</h2>
-<p class="intro">Enter the registration number and password issued to you by the school.</p>
+<p class="intro">Enter your registration ID and the password issued by the school.</p>
 <div id="loginMessage" class="message" role="alert"></div>
 <form id="loginForm" novalidate>
 <div class="field">
-<label for="registrationNumber">Registration Number</label>
+<label for="registrationNumber">Registration ID</label>
 <input id="registrationNumber" name="registration_number" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="e.g. LBS-2026-000001" required>
 </div>
 <div class="field">
@@ -68,7 +68,7 @@ body{margin:0;background:#f4f7fb;color:var(--ink);font-family:Inter,system-ui,-a
 </form>
 <div class="divider">Student services</div>
 <a class="secondary-btn" href="https://laffbritishmontessorischool.com/result.html">Check Published Result</a>
-<p class="login-note"><b>Important:</b> Keep your registration number and password private. If you cannot sign in, contact the school administrator.</p>
+<p class="login-note"><b>Important:</b> Keep your registration ID and password private. If you cannot sign in, contact the school administrator.</p>
 </div>
 </section>
 </main>
@@ -101,15 +101,15 @@ async function boot(){
   if(!session)return;
   try{
     const {data:profile,error}=await sb.from('profiles')
-      .select('role,is_active,must_change_password')
+      .select('role,must_change_password')
       .eq('id',session.user.id).maybeSingle();
-    if(!error&&profile?.role==='STUDENT'&&profile.is_active===true&&profile.must_change_password===true){
+    if(!error&&profile?.role==='STUDENT'&&profile.must_change_password===true){
       location.replace('student-change-password.html');
     }else{
-      location.replace('index.html');
+      location.replace('/dashboard');
     }
   }catch{
-    location.replace('index.html');
+    location.replace('/dashboard');
   }
 }
 boot();
@@ -119,7 +119,7 @@ form.addEventListener('submit',async(event)=>{
   showMessage('');
   const registrationNumber=registration.value.trim().replace(/\s+/g,'').toUpperCase();
   const passwordValue=password.value;
-  if(!registrationNumber||!passwordValue){showMessage('Enter your registration number and password.');return;}
+  if(!registrationNumber||!passwordValue){showMessage('Enter your registration ID and password.');return;}
   button.disabled=true;
   button.textContent='Signing in…';
   try{
@@ -132,8 +132,8 @@ form.addEventListener('submit',async(event)=>{
     if(!response.ok||!result.ok||!result.session)throw new Error(result.error||'Invalid registration number or password.');
     const {error:sessionError}=await sb.auth.setSession({access_token:result.session.access_token,refresh_token:result.session.refresh_token});
     if(sessionError)throw sessionError;
-    const {data:profile,error:profileError}=await sb.from('profiles').select('role,is_active,must_change_password').eq('id',(await sb.auth.getUser()).data.user.id).maybeSingle();
-    if(profileError||!profile||profile.role!=='STUDENT'||profile.is_active===false){await sb.auth.signOut();throw new Error('This is not an active student account. Please contact the school administrator.');}
+    const {data:profile,error:profileError}=await sb.from('profiles').select('role,must_change_password').eq('id',(await sb.auth.getUser()).data.user.id).maybeSingle();
+    if(profileError||!profile||profile.role!=='STUDENT'){await sb.auth.signOut();throw new Error('This login is not linked to a student account. Please contact the school administrator.');}
     showMessage('Sign in successful. Opening your student portal…','success');
     if(remember.checked){localStorage.setItem('laffStudentRemember','1');}else{localStorage.removeItem('laffStudentRemember');}
     setTimeout(()=>location.replace(profile.must_change_password?'student-change-password.html':'index.html'),250);
