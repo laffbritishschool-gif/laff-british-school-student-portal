@@ -6,7 +6,7 @@ const setText = (id, value) => { const el = byId(id); if (el) el.textContent = v
 const setVisible = (id, visible) => { const el = byId(id); if (el) el.hidden = !visible; };
 const displayTerm = value => {
   const raw = String(value || '').replaceAll('_', ' ').trim();
-  const key = raw.toUpperCase().replace(/\\s+TERM$/i, '');
+  const key = raw.toUpperCase().replace(/\s+TERM$/i, '');
   return ({ FIRST: 'First Term', SECOND: 'Second Term', THIRD: 'Third Term' })[key] || (raw ? (/TERM$/i.test(raw) ? raw : raw + ' Term') : 'Term');
 };
 const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -71,7 +71,7 @@ function updateStudentHeader(className = '—') {
   setText('shellStudentId', student.student_id);
   setText('shellClass', className);
   const avatar = byId('shellAvatar');
-  if (avatar) avatar.textContent = full.split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase() || 'ST';
+  if (avatar) avatar.textContent = full.split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase() || 'ST';
 }
 
 function populateClassChoices() {
