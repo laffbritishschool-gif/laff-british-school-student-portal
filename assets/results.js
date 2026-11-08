@@ -17,7 +17,7 @@ const ordinal = value => {
   return n + suffix;
 };
 
-let student, school, enrollments = [], selectedEnrollment = null, resultRows = [], gradingRules = [];
+let student, school, enrollments = [], allSessions = [], selectedEnrollment = null, resultRows = [], gradingRules = [];
 let requestVersion = 0;
 
 function state(message, detail = '') {
@@ -43,7 +43,11 @@ function setLoading(message = 'Loading your result…') {
 function setOptions(select, items, placeholder) {
   if (!select) return;
   select.replaceChildren(new Option(placeholder, ''));
-  items.forEach(item => select.add(new Option(item.label, item.value)));
+  items.forEach(item => {
+    const option = new Option(item.label, item.value);
+    option.disabled = Boolean(item.disabled);
+    select.add(option);
+  });
   select.disabled = items.length === 0;
 }
 
@@ -94,24 +98,29 @@ function populateClassChoices() {
 
 function populateSessionChoices(classId) {
   const sessionSelect = byId('resultSession');
-  const sessions = new Map();
   const classEnrollments = enrollments.filter(item => item.class_id === classId);
+  const sessions = new Map(allSessions.map(session => [session.id, session]));
   classEnrollments.forEach(item => {
     const session = Array.isArray(item.academic_sessions) ? item.academic_sessions[0] : item.academic_sessions;
-    if (item.session_id) sessions.set(item.session_id, session?.name || 'Academic session');
+    if (item.session_id && !sessions.has(item.session_id)) sessions.set(item.session_id, { id: item.session_id, name: session?.name || 'Academic session', starts_on: session?.starts_on || null });
     resultRows.filter(row => row.enrollment_id === item.id).forEach(row => {
       const term = Array.isArray(row.terms) ? row.terms[0] : row.terms;
       const resultSession = Array.isArray(term?.academic_sessions) ? term.academic_sessions[0] : term?.academic_sessions;
-      if (term?.session_id) sessions.set(term.session_id, resultSession?.name || 'Academic session');
+      if (term?.session_id && !sessions.has(term.session_id)) sessions.set(term.session_id, { id: term.session_id, name: resultSession?.name || 'Academic session', starts_on: resultSession?.starts_on || null });
     });
   });
-  const sorted = [...sessions].sort((a, b) => b[1].localeCompare(a[1]));
-  setOptions(sessionSelect, sorted.map(([value, label]) => ({ value, label })), 'Choose academic session / year');
-  const preferred = classEnrollments.sort((a, b) => String(b.academic_sessions?.starts_on || b.created_at || '').localeCompare(String(a.academic_sessions?.starts_on || a.created_at || '')))[0];
+  const today = new Date().toISOString().slice(0, 10);
+  const sorted = [...sessions.values()].sort((a, b) => String(b.starts_on || '').localeCompare(String(a.starts_on || '')) || String(b.name).localeCompare(String(a.name)));
+  const sessionOptions = sorted.map(session => {
+    const upcoming = Boolean(session.starts_on && session.starts_on > today);
+    return { value: session.id, label: session.name + (upcoming ? ' (Upcoming — not open yet)' : ''), disabled: upcoming };
+  });
+  setOptions(sessionSelect, sessionOptions, 'Choose academic session / year');
   const latestPublished = resultRows.find(row => classEnrollments.some(item => item.id === row.enrollment_id));
   const latestTerm = latestPublished ? (Array.isArray(latestPublished.terms) ? latestPublished.terms[0] : latestPublished.terms) : null;
-  const preferredSession = latestTerm?.session_id || preferred?.session_id;
-  if (preferredSession) sessionSelect.value = preferredSession;
+  const currentSession = sorted.find(session => session.starts_on && session.starts_on <= today && (!session.ends_on || session.ends_on >= today));
+  const preferred = currentSession?.id || latestTerm?.session_id || sorted.find(session => !session.starts_on || session.starts_on <= today)?.id;
+  if (preferred) sessionSelect.value = preferred;
   loadSelectedResult();
 }
 
@@ -246,14 +255,17 @@ async function init() {
     if (studentResponse.error) throw studentResponse.error;
     student = studentResponse.data;
     if (!student) throw new Error('Your student profile is not available. Please contact the school.');
-    const [schoolResponse, enrollmentResponse] = await Promise.all([
+    const [schoolResponse, enrollmentResponse, sessionsResponse] = await Promise.all([
       supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website,grading_rules,result_settings').limit(1).maybeSingle(),
-      supabase.from('enrollments').select('id,student_id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on)').eq('student_id', student.id).order('created_at', { ascending: false })
+      supabase.from('enrollments').select('id,student_id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on,ends_on)').eq('student_id', student.id).order('created_at', { ascending: false }),
+      supabase.from('academic_sessions').select('id,name,starts_on,ends_on').order('starts_on', { ascending: false })
     ]);
     if (schoolResponse.error) throw schoolResponse.error;
     if (enrollmentResponse.error) throw enrollmentResponse.error;
+    if (sessionsResponse.error) throw sessionsResponse.error;
     school = schoolResponse.data;
     enrollments = enrollmentResponse.data || [];
+    allSessions = sessionsResponse.data || [];
     if (enrollments.length) {
       const resultResponse = await supabase.from('results')
         .select('id,enrollment_id,subject_id,term_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,principal_remark,position,status,subjects(name,code,max_ca,max_exam),terms(id,name,session_id,academic_sessions(name,starts_on))')
