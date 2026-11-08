@@ -20,3 +20,11 @@
 .sidebar .toggle{background:#f7c928;color:#17395b;border:1px solid rgba(255,255,255,.35);box-shadow:0 5px 16px rgba(0,0,0,.2);font-size:22px}
 .student-sidebar-mobile-menu svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:760px){.sidebar .brand{height:78px}.sidebar .nav a{min-height:46px}}
+
+
+/* Consistent inline SVGs for the header notification and student menu. */
+#notificationBell{font-size:0}
+#notificationBell svg{display:block;width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.profile-menu a,.profile-menu button{display:flex;align-items:center;gap:11px}
+.profile-menu .profile-menu-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#edf4ff;color:#0755a5}
+.profile-menu .profile-menu-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
