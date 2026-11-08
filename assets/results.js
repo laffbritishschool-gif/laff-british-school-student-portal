@@ -120,9 +120,19 @@ function populateSessionChoices(classId) {
   const latestPublished = resultRows.find(row => classEnrollments.some(item => item.id === row.enrollment_id));
   const latestTerm = latestPublished ? (Array.isArray(latestPublished.terms) ? latestPublished.terms[0] : latestPublished.terms) : null;
   const currentSession = sorted.find(session => session.starts_on && session.starts_on <= today && (!session.ends_on || session.ends_on >= today));
-  const preferred = currentSession?.id || latestTerm?.session_id || sorted.find(session => !session.starts_on || session.starts_on <= today)?.id;
+  const currentSessionHasClassData = currentSession && (
+    classEnrollments.some(item => item.session_id === currentSession.id) ||
+    resultRows.some(row => classEnrollments.some(item => item.id === row.enrollment_id) && (Array.isArray(row.terms) ? row.terms[0] : row.terms)?.session_id === currentSession.id)
+  );
+  const preferred = (currentSessionHasClassData ? currentSession.id : null) || latestTerm?.session_id || preferredSessionForClass(classEnrollments, sorted);
   if (preferred) sessionSelect.value = preferred;
   loadSelectedResult();
+}
+
+function preferredSessionForClass(classEnrollments, sessions) {
+  const enrolledSession = classEnrollments.find(item => item.session_id)?.session_id;
+  if (enrolledSession) return enrolledSession;
+  return sessions.find(session => !session.starts_on || session.starts_on <= new Date().toLocaleDateString('en-CA'))?.id;
 }
 
 function gradeFor(score) {
