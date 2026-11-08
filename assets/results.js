@@ -122,9 +122,11 @@ function gradeFor(score) {
 
 function renderResult(group, rows) {
   const classRow = Array.isArray(group.classes) ? group.classes[0] : group.classes;
-  const sessionRow = Array.isArray(group.academic_sessions) ? group.academic_sessions[0] : group.academic_sessions;
+  const enrollmentSession = Array.isArray(group.academic_sessions) ? group.academic_sessions[0] : group.academic_sessions;
   const termRows = rows.map(row => Array.isArray(row.terms) ? row.terms[0] : row.terms).filter(Boolean);
   const term = termRows[0] || {};
+  const termSession = Array.isArray(term.academic_sessions) ? term.academic_sessions[0] : term.academic_sessions;
+  const sessionRow = termSession || enrollmentSession;
   const sessionName = sessionRow?.name || '—';
   const termName = displayTerm(term.name);
   const className = classRow?.name || '—';
