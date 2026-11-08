@@ -233,17 +233,19 @@ async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { location.replace('/student-login'); return; }
     const uid = session.user.id;
-    const [studentResponse, schoolResponse, enrollmentResponse] = await Promise.all([
-      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,exam_number,status,gender,date_of_birth').eq('user_id', uid).maybeSingle(),
-      supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website,grading_rules,result_settings').limit(1).maybeSingle(),
-      supabase.from('enrollments').select('id,student_id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on)').eq('student_id', studentResponse.data?.id || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false })
-    ]);
+    const studentResponse = await supabase.from('students')
+      .select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,exam_number,status,gender,date_of_birth')
+      .eq('user_id', uid).maybeSingle();
     if (studentResponse.error) throw studentResponse.error;
+    student = studentResponse.data;
+    if (!student) throw new Error('Your student profile is not available. Please contact the school.');
+    const [schoolResponse, enrollmentResponse] = await Promise.all([
+      supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website,grading_rules,result_settings').limit(1).maybeSingle(),
+      supabase.from('enrollments').select('id,student_id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on)').eq('student_id', student.id).order('created_at', { ascending: false })
+    ]);
     if (schoolResponse.error) throw schoolResponse.error;
     if (enrollmentResponse.error) throw enrollmentResponse.error;
-    student = studentResponse.data;
     school = schoolResponse.data;
-    if (!student) throw new Error('Your student profile is not available. Please contact the school.');
     enrollments = enrollmentResponse.data || [];
     gradingRules = Array.isArray(school?.grading_rules) ? school.grading_rules : [];
     if (!enrollments.length) {
