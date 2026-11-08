@@ -19,15 +19,32 @@ const DEFAULT_SCHOOL_SETTINGS = {
 
 // SINGLE SOURCE OF TRUTH FOR THE ENTIRE STUDENT PORTAL SIDEBAR.
 const STUDENT_NAV = [
-  ['/', 'Dashboard', '⌂'],
-  ['/student-profile', 'My Profile', '♙'],
-  ['/student-results', 'Results', '▥'],
-  ['/student-attendance', 'Attendance', '✓'],
-  ['/student-timetable?v=3', 'Timetable', '□'],
-  ['/student-announcements', 'Announcements', '♢'],
-  ['/student-fees', 'Fees & Payments', '₦'],
-  ['/id-card', 'My ID Card', '▣']
+  ['/', 'Dashboard', 'layout-dashboard'],
+  ['/student-profile', 'My Profile', 'user-round'],
+  ['/student-results', 'Results', 'chart-no-axes-column'],
+  ['/student-attendance', 'Attendance', 'calendar-check'],
+  ['/student-timetable?v=3', 'Timetable', 'calendar-days'],
+  ['/student-announcements', 'Announcements', 'megaphone'],
+  ['/student-fees', 'Fees & Payments', 'wallet-cards'],
+  ['/id-card', 'My ID Card', 'id-card']
 ];
+
+const NAV_ICON_PATHS = {
+  'layout-dashboard': '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  'user-round': '<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  'chart-no-axes-column': '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
+  'calendar-check': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18m-13 5 2 2 4-4"/>',
+  'calendar-days': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01"/>',
+  'megaphone': '<path d="m3 11 18-5v12L3 13v-2Z"/><path d="M11.6 15.4 13 21H8l-2-8M5 13l-2 5"/>',
+  'wallet-cards': '<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 10h18M7 6V4a1 1 0 0 1 1-1h11M16 15h.01"/>',
+  'id-card': '<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.8-1.3 1.8-2 3-2s2.2.7 3 2m3-5h3m-3 4h3"/>',
+  'log-out': '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"/>',
+  'menu': '<path d="M4 6h16M4 12h16M4 18h16"/>'
+};
+
+function navIcon(name) {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g>${NAV_ICON_PATHS[name] || NAV_ICON_PATHS['layout-dashboard']}</g></svg>`;
+}
 
 export function escapeHtml(value = '') {
   return String(value).replace(/[&<>'\"]/g, char => ({
@@ -128,7 +145,7 @@ function renderSidebar(settings) {
   const safeSettings = mergeSettings(settings);
   const links = STUDENT_NAV.map(([href, label, icon]) => `
     <a class="${href.split('?')[0] === current ? 'active' : ''}" href="${href}">
-      <span class="ico">${icon}</span>
+      <span class="ico">${navIcon(icon)}</span>
       <span>${escapeHtml(label)}</span>
     </a>`).join('');
 
@@ -141,7 +158,7 @@ function renderSidebar(settings) {
     <nav class="nav" aria-label="Primary">
       <div class="nav-links">${links}</div>
       <div class="nav-bottom">
-        <a class="logout" id="studentSidebarLogout" href="#"><span class="ico">↪</span><span>Sign Out</span></a>
+        <a class="logout" id="studentSidebarLogout" href="#"><span class="ico">${navIcon('log-out')}</span><span>Sign Out</span></a>
       </div>
     </nav>
   </aside>`;
@@ -191,7 +208,7 @@ function ensureMobileMenu() {
   button.type = 'button';
   button.className = 'student-sidebar-mobile-menu';
   button.setAttribute('aria-label', 'Open student navigation');
-  button.textContent = '☰';
+  button.innerHTML = navIcon('menu');
   button.addEventListener('click', () => toggleSidebar(true));
   top.insertBefore(button, copy || top.firstChild);
 }
