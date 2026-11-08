@@ -39,7 +39,9 @@ const NAV_ICON_PATHS = {
   'wallet-cards': '<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 10h18M7 6V4a1 1 0 0 1 1-1h11M16 15h.01"/>',
   'id-card': '<rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.8-1.3 1.8-2 3-2s2.2.7 3 2m3-5h3m-3 4h3"/>',
   'log-out': '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"/>',
-  'menu': '<path d="M4 6h16M4 12h16M4 18h16"/>'
+  'menu': '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  'bell': '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+  'log-out': '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"/>'
 };
 
 function navIcon(name) {
@@ -322,7 +324,7 @@ function ensureProfileMenu() {
   chip.setAttribute('role', 'button'); chip.setAttribute('tabindex', '0'); chip.setAttribute('aria-haspopup','menu'); chip.setAttribute('aria-expanded','false');
   chip.classList.add('profile-chip-clickable');
   const menu = document.createElement('div'); menu.id='profileMenu'; menu.className='profile-menu';
-  menu.innerHTML = `<a href="/student-profile"><span>♙</span><div><b>My Profile</b><small>View your student information</small></div></a><button type="button" class="profile-logout"><span>↪</span><div><b>Logout</b><small>Sign out of this account</small></div></button>`;
+  menu.innerHTML = `<a href="/student-profile"><span class="profile-menu-icon">${navIcon('user-round')}</span><div><b>My Profile</b><small>View your student information</small></div></a><button type="button" class="profile-logout"><span class="profile-menu-icon">${navIcon('log-out')}</span><div><b>Logout</b><small>Sign out of this account</small></div></button>`;
   chip.parentElement.style.position='relative'; chip.parentElement.appendChild(menu);
   const toggle=()=>{const open=menu.classList.toggle('show');chip.setAttribute('aria-expanded',open?'true':'false')};
   chip.addEventListener('click',toggle);
@@ -341,7 +343,7 @@ export function mountStudentShell({ title='Student Portal', subtitle='', content
   const app=document.querySelector('#student-app,#app');
   if(!app)return;
   const settings=getCachedSchoolSettings();
-  app.innerHTML=`<div class="app"><main class="main"><header class="top"><div><div class="eyebrow">STUDENT PORTAL</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">♢<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="shellAvatar">ST</div><div><b id="shellName">Student</b><div class="muted"><span id="shellStudentId">—</span> · <span id="shellClass">—</span></div></div></div></div></header>${content}</main></div>`;
+  app.innerHTML=`<div class="app"><main class="main"><header class="top"><div><div class="eyebrow">STUDENT PORTAL</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="top-actions"><button class="icon-btn" id="notificationBell" aria-label="Notifications">${navIcon('bell')}<span class="dot"></span></button><div class="profile-chip"><div class="avatar" id="shellAvatar">ST</div><div><b id="shellName">Student</b><div class="muted"><span id="shellStudentId">—</span> · <span id="shellClass">—</span></div></div></div></div></header>${content}</main></div>`;
   const shell=document.createElement('div'); shell.innerHTML=renderSidebar(settings); app.querySelector('.app')?.prepend(shell.firstElementChild);
   injectSidebarRuntimeStyles(); bindSidebarEvents(); ensureMobileMenu(); ensureNotificationCenter(); ensureProfileMenu();
   document.getElementById('notificationBell')?.addEventListener('click',openNotificationCenter); loadSchoolSettings();
