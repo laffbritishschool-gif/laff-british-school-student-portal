@@ -95,14 +95,23 @@ function populateClassChoices() {
 function populateSessionChoices(classId) {
   const sessionSelect = byId('resultSession');
   const sessions = new Map();
-  enrollments.filter(item => item.class_id === classId).forEach(item => {
+  const classEnrollments = enrollments.filter(item => item.class_id === classId);
+  classEnrollments.forEach(item => {
     const session = Array.isArray(item.academic_sessions) ? item.academic_sessions[0] : item.academic_sessions;
     if (item.session_id) sessions.set(item.session_id, session?.name || 'Academic session');
+    resultRows.filter(row => row.enrollment_id === item.id).forEach(row => {
+      const term = Array.isArray(row.terms) ? row.terms[0] : row.terms;
+      const resultSession = Array.isArray(term?.academic_sessions) ? term.academic_sessions[0] : term?.academic_sessions;
+      if (term?.session_id) sessions.set(term.session_id, resultSession?.name || 'Academic session');
+    });
   });
   const sorted = [...sessions].sort((a, b) => b[1].localeCompare(a[1]));
   setOptions(sessionSelect, sorted.map(([value, label]) => ({ value, label })), 'Choose academic session / year');
-  const preferred = enrollments.filter(item => item.class_id === classId).sort((a, b) => String(b.academic_sessions?.starts_on || b.created_at || '').localeCompare(String(a.academic_sessions?.starts_on || a.created_at || '')))[0];
-  if (preferred?.session_id) sessionSelect.value = preferred.session_id;
+  const preferred = classEnrollments.sort((a, b) => String(b.academic_sessions?.starts_on || b.created_at || '').localeCompare(String(a.academic_sessions?.starts_on || a.created_at || '')))[0];
+  const latestPublished = resultRows.find(row => classEnrollments.some(item => item.id === row.enrollment_id));
+  const latestTerm = latestPublished ? (Array.isArray(latestPublished.terms) ? latestPublished.terms[0] : latestPublished.terms) : null;
+  const preferredSession = latestTerm?.session_id || preferred?.session_id;
+  if (preferredSession) sessionSelect.value = preferredSession;
   loadSelectedResult();
 }
 
@@ -179,7 +188,10 @@ async function loadSelectedResult() {
     state('Choose your class and academic session', 'Select the class and school year to look up your published result.');
     return;
   }
-  selectedEnrollment = enrollments.find(item => item.class_id === classId && item.session_id === sessionId);
+  const classEnrollments = enrollments.filter(item => item.class_id === classId);
+  selectedEnrollment = classEnrollments.find(item => item.session_id === sessionId && resultRows.some(row => row.enrollment_id === item.id && (Array.isArray(row.terms) ? row.terms[0] : row.terms)?.session_id === sessionId))
+    || classEnrollments.find(item => resultRows.some(row => row.enrollment_id === item.id && (Array.isArray(row.terms) ? row.terms[0] : row.terms)?.session_id === sessionId))
+    || classEnrollments.find(item => item.session_id === sessionId);
   if (!selectedEnrollment) {
     state('No class enrolment found', 'Please contact the school office if this class and session should be listed.');
     return;
@@ -189,18 +201,11 @@ async function loadSelectedResult() {
   setLoading('Finding your published result…');
   if (byId('printResult')) byId('printResult').disabled = true;
   try {
-    const { data, error } = await supabase.from('results')
-      .select('id,enrollment_id,subject_id,term_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,principal_remark,position,status,subjects(name,code,max_ca,max_exam),terms(id,name,session_id)')
-      .eq('enrollment_id', selectedEnrollment.id)
-      .eq('status', 'PUBLISHED')
-      .order('subject_id', { ascending: true });
-    if (error) throw error;
     if (version !== requestVersion) return;
-    resultRows = data || [];
     const matchingRows = resultRows.filter(row => {
       const term = Array.isArray(row.terms) ? row.terms[0] : row.terms;
-      return term?.session_id === sessionId;
-    });
+      return row.enrollment_id === selectedEnrollment.id && term?.session_id === sessionId;
+    }).sort((a, b) => String(a.subject_id).localeCompare(String(b.subject_id)));
     const groups = new Map();
     matchingRows.forEach(row => {
       if (!groups.has(row.term_id)) groups.set(row.term_id, []);
@@ -247,6 +252,15 @@ async function init() {
     if (enrollmentResponse.error) throw enrollmentResponse.error;
     school = schoolResponse.data;
     enrollments = enrollmentResponse.data || [];
+    if (enrollments.length) {
+      const resultResponse = await supabase.from('results')
+        .select('id,enrollment_id,subject_id,term_id,ca_score,exam_score,total,grade,grade_point,teacher_remark,principal_remark,position,status,subjects(name,code,max_ca,max_exam),terms(id,name,session_id,academic_sessions(name,starts_on))')
+        .in('enrollment_id', enrollments.map(item => item.id))
+        .eq('status', 'PUBLISHED')
+        .order('subject_id', { ascending: true });
+      if (resultResponse.error) throw resultResponse.error;
+      resultRows = resultResponse.data || [];
+    }
     gradingRules = Array.isArray(school?.grading_rules) ? school.grading_rules : [];
     if (!enrollments.length) {
       updateStudentHeader();
