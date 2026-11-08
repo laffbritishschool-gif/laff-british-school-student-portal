@@ -236,7 +236,7 @@ async function init() {
     const [studentResponse, schoolResponse, enrollmentResponse] = await Promise.all([
       supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,exam_number,status,gender,date_of_birth').eq('user_id', uid).maybeSingle(),
       supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website,grading_rules,result_settings').limit(1).maybeSingle(),
-      supabase.from('enrollments').select('id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on)').order('created_at', { ascending: false })
+      supabase.from('enrollments').select('id,student_id,class_id,session_id,status,created_at,classes(id,name),academic_sessions(id,name,starts_on)').eq('student_id', studentResponse.data?.id || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false })
     ]);
     if (studentResponse.error) throw studentResponse.error;
     if (schoolResponse.error) throw schoolResponse.error;
@@ -244,7 +244,7 @@ async function init() {
     student = studentResponse.data;
     school = schoolResponse.data;
     if (!student) throw new Error('Your student profile is not available. Please contact the school.');
-    enrollments = (enrollmentResponse.data || []).filter(item => item.student_id === student.id);
+    enrollments = enrollmentResponse.data || [];
     gradingRules = Array.isArray(school?.grading_rules) ? school.grading_rules : [];
     if (!enrollments.length) {
       updateStudentHeader();
