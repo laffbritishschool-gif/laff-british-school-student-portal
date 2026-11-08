@@ -109,7 +109,8 @@ function populateSessionChoices(classId) {
       if (term?.session_id && !sessions.has(term.session_id)) sessions.set(term.session_id, { id: term.session_id, name: resultSession?.name || 'Academic session', starts_on: resultSession?.starts_on || null });
     });
   });
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
   const sorted = [...sessions.values()].sort((a, b) => String(b.starts_on || '').localeCompare(String(a.starts_on || '')) || String(b.name).localeCompare(String(a.name)));
   const sessionOptions = sorted.map(session => {
     const upcoming = Boolean(session.starts_on && session.starts_on > today);
