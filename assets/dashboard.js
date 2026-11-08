@@ -94,7 +94,7 @@ async function loadDashboard() {
     const uid = session.user.id;
 
     const [studentRes, schoolRes, sessionRes, termRes, announcementRes] = await Promise.all([
-      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,status').eq('user_id', uid).maybeSingle(),
+      supabase.from('students').select('id,student_id,first_name,middle_name,last_name,photo_url,school_email,exam_number,status,gender,phone').eq('user_id', uid).maybeSingle(),
       supabase.from('school_settings').select('school_name,motto,logo_url,address,phone,email,website').limit(1).maybeSingle(),
       supabase.from('academic_sessions').select('id,name,starts_on,ends_on').eq('is_current', true).order('starts_on', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('terms').select('id,name,session_id,starts_on,ends_on').eq('is_current', true).order('starts_on', { ascending: false }).limit(1).maybeSingle(),
@@ -165,6 +165,18 @@ async function loadDashboard() {
     set('heroStudentName', name);
     set('heroStudentClass', className);
     set('heroStudentId', student.student_id || '—');
+    const schoolEmail = student.school_email || session.user.email || '—';
+    set('dashboardProfileName', name);
+    set('dashboardProfileClass', className);
+    set('dashboardProfileStatus', student.status || 'ACTIVE');
+    set('dashboardProfileId', student.student_id || '—');
+    set('dashboardProfileExam', student.exam_number || '—');
+    set('dashboardProfileEmail', schoolEmail);
+    set('dashboardProfilePhone', student.phone || '—');
+    set('dashboardProfileGender', student.gender || '—');
+    set('dashboardProfileSession', currentSession?.name || '—');
+    set('dashboardProfileTerm', formatTerm(currentTerm?.name));
+    set('dashboardProfileEnrollment', enrollment?.status || 'Not enrolled');
     set('sessionName', currentSession?.name || '—');
     set('termName', formatTerm(currentTerm?.name));
     set('studentStatus', student.status || 'ACTIVE');
@@ -174,6 +186,7 @@ async function loadDashboard() {
     const photoUrl = await getStudentPhotoUrl(student.photo_url);
     applyAvatar('shellAvatar', photoUrl, student);
     applyAvatar('heroAvatar', photoUrl, student);
+    applyAvatar('dashboardProfileAvatar', photoUrl, student);
 
     // Academic snapshot.
     setHtml('resultList', results.slice(0, 6).map(row => `
