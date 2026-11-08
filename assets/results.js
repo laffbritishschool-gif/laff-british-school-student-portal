@@ -124,15 +124,15 @@ function populateSessionChoices(classId) {
     classEnrollments.some(item => item.session_id === currentSession.id) ||
     resultRows.some(row => classEnrollments.some(item => item.id === row.enrollment_id) && (Array.isArray(row.terms) ? row.terms[0] : row.terms)?.session_id === currentSession.id)
   );
-  const preferred = (currentSessionHasClassData ? currentSession.id : null) || latestTerm?.session_id || preferredSessionForClass(classEnrollments, sorted);
+  const preferred = (currentSessionHasClassData ? currentSession.id : null) || latestTerm?.session_id || preferredSessionForClass(classEnrollments, sorted, today);
   if (preferred) sessionSelect.value = preferred;
   loadSelectedResult();
 }
 
-function preferredSessionForClass(classEnrollments, sessions) {
+function preferredSessionForClass(classEnrollments, sessions, today) {
   const enrolledSession = classEnrollments.find(item => item.session_id)?.session_id;
   if (enrolledSession) return enrolledSession;
-  return sessions.find(session => !session.starts_on || session.starts_on <= new Date().toLocaleDateString('en-CA'))?.id;
+  return sessions.find(session => !session.starts_on || session.starts_on <= today)?.id;
 }
 
 function gradeFor(score) {
